@@ -35,4 +35,19 @@ public class DFService {
         }
     }
 
+    public Map<String, Object> getCharacterInfo(String server, String characterId) {
+        try {
+            String url = UriComponentsBuilder
+                    .fromUriString("https://api.neople.co.kr/df/servers/{server}/characters/{characterId}")
+                    .queryParam("apikey", apiKey)
+                    .buildAndExpand(server, characterId)
+                    .toUriString();
+
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, null, Map.class);
+            return response.getBody();
+        } catch (Exception e) {
+            throw new RuntimeException("던파 캐릭터 조회 실패: " + e.getMessage());
+        }
+    }
+
 }
