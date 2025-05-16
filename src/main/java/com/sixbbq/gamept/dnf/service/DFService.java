@@ -19,7 +19,7 @@ public class DFService {
     @Value("${dnf.api.key}")
     private String apiKey;
 
-    public Map<String, Object> getCharacterBasicInfo(String server, String name) {
+    public Map<String, Object> searchCharacter(String server, String name) {
         try {
             String url = UriComponentsBuilder
                     .fromUriString("https://api.neople.co.kr/df/servers/{server}/characters")
