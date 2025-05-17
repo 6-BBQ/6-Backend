@@ -25,11 +25,11 @@ public class MapleCharacter {
     private String worldName;
     
     @Column(nullable = false)
-    private String accountId;
-    
-    @Column(nullable = false)
     private String characterClass;
     
     @Column(nullable = false)
     private String ocid;
+    
+    @Column(nullable = false)
+    private String accountId;
 }

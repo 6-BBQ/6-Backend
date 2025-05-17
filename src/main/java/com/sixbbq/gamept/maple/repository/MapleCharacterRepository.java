@@ -4,7 +4,6 @@ import com.sixbbq.gamept.maple.entity.MapleCharacter;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -12,7 +11,5 @@ public interface MapleCharacterRepository extends JpaRepository<MapleCharacter, 
     
     Optional<MapleCharacter> findByCharacterName(String characterName);
     
-    List<MapleCharacter> findByAccountId(String accountId);
-    
-    boolean existsByCharacterName(String characterName);
+    Optional<MapleCharacter> findByOcid(String ocid);
 }
