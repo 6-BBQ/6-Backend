@@ -10,10 +10,11 @@ import org.springframework.http.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class LoaService {
-    @Value("${lostark.api.token}")
+    @Value("${loa.api.token}")
     private String token;
 
     private final RestTemplate restTemplate;
@@ -24,8 +25,8 @@ public class LoaService {
         this.urlProvider = urlProvider;
     }
 
-    public List<CharacterInfoResponseDTO> getCharacters(String characterName) {
-        String url = urlProvider.getCharacterSiblingsUrl(characterName);
+    public List<CharacterInfoResponseDTO> getRoster(String characterName) {
+        String url = urlProvider.getCharacterRoasterUrl(characterName);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "bearer " + token);
@@ -41,5 +42,26 @@ public class LoaService {
             return Arrays.asList(response.getBody());
         else
             return null;
+    }
+
+    public Map<String, Object> getCharacterInfo(String characterName) {
+        String url = urlProvider.getCharacterInfoUrl(characterName, null);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "bearer " + token);
+        headers.set("Accept", "application/json");
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<Map> response = restTemplate.exchange(
+                url, HttpMethod.GET, entity, Map.class
+        );
+
+        if(response.getBody() == null)
+            return null;
+
+        Map<String, Object> result = response.getBody();
+
+        return result;
     }
 }
