@@ -30,3 +30,8 @@ springdoc:
     path: /api-docs
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+maplestory:
+  api:
+    key: ${MAPLESTORY_API_KEY}
+    base-url: ${MAPLESTORY_API_BASE_URL}
