@@ -24,7 +24,6 @@ springdoc:
     operations-sorter: alpha
     tags-sorter: alpha
     disable-swagger-default-url: true
-    display-query-params-without-oauth2: true
     doc-expansion: none
   api-docs:
     path: /api-docs
@@ -35,3 +34,12 @@ maplestory:
   api:
     key: ${MAPLESTORY_API_KEY}
     base-url: ${MAPLESTORY_API_BASE_URL}
+
+dnf:
+  api:
+    key: ${DNF_API_KEY}
+
+loa:
+  api:
+    base-url: https://developer-lostark.game.onstove.com
+    token: ${LOA_API_KEY}
