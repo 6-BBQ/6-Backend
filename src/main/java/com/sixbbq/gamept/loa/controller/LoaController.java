@@ -41,11 +41,13 @@ public class LoaController {
 
     // 캐릭터 정보 조회
     @GetMapping("/character")
-    public ResponseEntity<?> searchCharacter(@RequestParam String characterName) {
+    public ResponseEntity<?> searchCharacter(@RequestParam String characterName,
+                                             @RequestParam(required = false) String filter) {
         log.info("/api/loa/character : GET");
         log.info("검색 캐릭터명 : " + characterName);
+        log.info("검색 정보[필터] : " + filter);
 
-        Map<String, Object> characterInfo = loaService.getCharacterInfo(characterName);
+        Map<String, Object> characterInfo = loaService.getCharacterInfo(characterName, filter);
 
         if(characterInfo == null)
             return ResponseEntity.ok().body("일치하는 캐릭터가 없습니다!");

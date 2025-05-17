@@ -9,6 +9,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -38,14 +39,21 @@ public class LoaService {
                 url, HttpMethod.GET, entity, CharacterInfoResponseDTO[].class
         );
 
-        if (response.getBody() != null)
-            return Arrays.asList(response.getBody());
+        if (response.getBody() != null) {
+            List<CharacterInfoResponseDTO> characterList = Arrays.asList(response.getBody());
+            // itemMaxLevel이 높은 순으로 재정렬
+            characterList.sort(Comparator.comparingDouble((CharacterInfoResponseDTO c) ->
+                    Double.parseDouble(c.getItemMaxLevel().replace(",", ""))
+            ).reversed());
+
+            return characterList;
+        }
         else
             return null;
     }
 
-    public Map<String, Object> getCharacterInfo(String characterName) {
-        String url = urlProvider.getCharacterInfoUrl(characterName, null);
+    public Map<String, Object> getCharacterInfo(String characterName, String filter) {
+        String url = urlProvider.getCharacterInfoUrl(characterName, filter);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "bearer " + token);

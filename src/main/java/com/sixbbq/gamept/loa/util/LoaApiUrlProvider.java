@@ -15,8 +15,9 @@ public class LoaApiUrlProvider {
     public String getCharacterInfoUrl(String characterName, String filter) {
         if(filter == null || filter.isEmpty())
             return baseUrl + "/armories/characters/" + characterName;
-        else
+        else {
             return baseUrl + "/armories/characters/" + characterName + "/" + filter;
+        }
     }
 
 
