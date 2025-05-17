@@ -33,3 +33,8 @@ springdoc:
 dnf:
   api:
     key: ${DNF_API_KEY}
+
+loa:
+  api:
+    base-url: https://developer-lostark.game.onstove.com
+    token: ${LOA_API_KEY}
