@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class DFController {
 
-    private final DFService DFService;
+    private final DFService dfService;
 
     /**
      * [가능한 서버 ID 목록]
@@ -26,6 +26,7 @@ public class DFController {
      *  - hilder    : 힐더
      *  - anton     : 안톤
      *  - bakal     : 바칼
+     *  - adven     : 모험단
      */
 
     /**
@@ -34,13 +35,13 @@ public class DFController {
      * [요청 방식]
      * GET /api/df/search?server={serverId}&name={characterName}
      *
-     * @param server 서버 ID (영문 식별자, 아래 목록 참조)
-     * @param name   캐릭터 이름
+     * @param server 서버 ID (영문 식별자, 목록 참조) // 모험단
+     * @param name   캐릭터 이름 // 모험단명
      * @return       캐릭터 ID, 요약된 정보 (JSON)
      */
     @GetMapping("/search")
     public ResponseEntity<?> searchCharacter(@RequestParam String server, @RequestParam String name) {
-        return ResponseEntity.ok(DFService.searchCharacter(server, name));
+        return ResponseEntity.ok(dfService.searchCharacter(server, name));
     }
 
     /**
@@ -55,6 +56,6 @@ public class DFController {
      */
     @GetMapping("/character")
     public ResponseEntity<?> getCharacterInfo(@RequestParam String server, @RequestParam String characterId) {
-        return ResponseEntity.ok(DFService.getCharacterInfo(server, characterId));
+        return ResponseEntity.ok(dfService.getCharacterInfo(server, characterId));
     }
 }
