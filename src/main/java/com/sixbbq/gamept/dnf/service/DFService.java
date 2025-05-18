@@ -74,6 +74,7 @@ public class DFService {
                 }
             } catch (Exception e) {
                 System.err.println("모험단 내 캐릭터 '" + memberCharacterName + "'(" + memberServerId + ") 조회 실패: " + e.getMessage());
+                return Map.of("rows", Collections.emptyList(), "error", "캐릭터 검색 중 오류가 발생했습니다.");
             }
         }
         return Map.of("rows", foundCharactersFromApi);
