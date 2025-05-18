@@ -1,22 +1,20 @@
 package com.sixbbq.gamept.maple.service;
 
 import com.sixbbq.gamept.maple.entity.MapleCharacter;
+import com.sixbbq.gamept.maple.model.dto.MapleCharacterResponseDto;
 import com.sixbbq.gamept.maple.repository.MapleCharacterRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -27,128 +25,161 @@ public class MapleService {
 
     @Value("${maplestory.api.key}")
     private String apiKey;
-    
+
     @Value("${maplestory.api.base-url}")
     private String baseUrl;
 
     /**
-     * 캐릭터명으로 ocid 검색
+     * 캐릭터명으로 기본 정보 및 본캐 매핑 포함 정보 조회
      */
     @Transactional
     public Map<String, Object> searchCharacter(String characterName) {
         Map<String, Object> result = new HashMap<>();
-        
-        // 1. DB에서 먼저 확인
-        Optional<MapleCharacter> existingCharacter = characterRepository.findByCharacterName(characterName);
-        if (existingCharacter.isPresent()) {
-            MapleCharacter character = existingCharacter.get();
-            result.put("ocid", character.getOcid());
-            result.put("characterName", character.getCharacterName());
-            result.put("worldName", character.getWorldName());
-            result.put("characterClass", character.getCharacterClass());
-            return result;
-        }
-        
-        // 2. API 호출로 ocid 조회
+
+        // 1. 캐릭터명으로 ocid 조회
         String ocid = getCharacterOcid(characterName);
         if (ocid == null) {
             result.put("error", "캐릭터를 찾을 수 없습니다");
             return result;
         }
-        
-        // 기본 정보 반환
+
+        // 2. ocid로 기본 정보 조회
+        Map<String, Object> info = getCharacterInfo(ocid);
+        if (info == null || info.get("character_name") == null) {
+            result.put("error", "캐릭터 기본 정보를 가져올 수 없습니다");
+            return result;
+        }
+
+        // 3. 결과 구성
         result.put("ocid", ocid);
-        result.put("characterName", characterName);
+        result.put("characterName", info.get("character_name"));
+        result.put("worldName", info.get("world_name"));
+        result.put("characterLevel", info.get("character_level"));
+        result.put("characterClass", info.get("character_class"));
+        result.put("characterGender", info.get("character_gender"));
+        result.put("characterImage", info.get("character_image"));
+        result.put("representativeName", info.get("representative_name"));
+
         return result;
     }
 
     /**
-     * ocid로 캐릭터 상세 정보 조회
+     * ocid로 메이플 캐릭터 기본 정보를 조회하고,
+     * 해당 캐릭터를 DB에 저장/갱신하며 본캐 기준으로 묶기
      */
     @Transactional
     public Map<String, Object> getCharacterInfo(String ocid) {
-        // 캐릭터 기본 정보 조회
-        LocalDate yesterday = LocalDate.now().minusDays(1);
-        String url = baseUrl + "/character/basic?ocid=" + ocid + "&date=" + yesterday.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        LocalDate date = LocalDate.now().minusDays(1);
+        String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String basicUrl = baseUrl + "/character/basic?ocid=" + ocid + "&date=" + dateStr;
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("x-nxopen-api-key", apiKey);
         HttpEntity<?> entity = new HttpEntity<>(headers);
-        
-        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+
+        // 1. 기본 정보 API 호출
+        ResponseEntity<Map> response = restTemplate.exchange(basicUrl, HttpMethod.GET, entity, Map.class);
         Map<String, Object> result = response.getBody();
-        
+
         if (result == null || result.containsKey("error")) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "캐릭터 정보를 찾을 수 없습니다");
-            return error;
+            return null;
         }
-        
+
+        // 2. 캐릭터 정보 파싱
         String characterName = (String) result.get("character_name");
-        
-        // DB에 캐릭터 정보 저장 또는 업데이트 (계정 ID와 함께)
-        if (characterName != null && result.get("world_name") != null && result.get("character_class") != null) {
-            Optional<MapleCharacter> existingCharacter = characterRepository.findByOcid(ocid);
-            
-            // 계정 ID 생성 (캐릭터 이름 기반)
-            // 캐릭터 이름과 월드 정보를 기반으로 accountId를 생성합 (generateAccountId 메서드 사용)
-            // 새로운 캐릭터 정보를 DB에 저장할 때 accountId도 함께 저장
-            // 응답에 accountId를 추가하여 클라이언트에게 반환
-            // 이 방식으로 각 캐릭터와 계정 ID 간의 매핑이 데이터베이스에 저장
-            String accountId = generateAccountId(characterName, (String) result.get("world_name"));
-            
-            if (existingCharacter.isPresent()) {
-                // 필요하다면 여기에 캐릭터 정보 업데이트 로직 추가
-            } else {
-                // 새로운 캐릭터 저장
-                MapleCharacter character = MapleCharacter.builder()
-                        .characterName(characterName)
-                        .accountId(accountId)
-                        .worldName((String) result.get("world_name"))
-                        .characterClass((String) result.get("character_class"))
-                        .ocid(ocid)
-                        .build();
-                
+        String worldName = (String) result.get("world_name");
+
+        // 3. 대표 캐릭터명 조회
+        String representativeName = getRepresentativeName(worldName, ocid, dateStr);
+        result.put("representative_name", representativeName);
+
+        // 4. DB 저장 or 업데이트
+        Optional<MapleCharacter> existing = characterRepository.findByOcid(ocid);
+
+        if (existing.isPresent()) {
+            MapleCharacter character = existing.get();
+            if (!representativeName.equals(character.getRepresentativeName())) {
+                character.setRepresentativeName(representativeName);
                 characterRepository.save(character);
             }
-            
-            // 결과에 계정 ID 추가
-            result.put("accountId", accountId);
+        } else {
+            MapleCharacter character = MapleCharacter.builder()
+                    .characterName(characterName)
+                    .worldName(worldName)
+                    .ocid(ocid)
+                    .characterClass((String) result.get("character_class"))
+                    .representativeName(representativeName)
+                    .build();
+            characterRepository.save(character);
         }
-        
+
         return result;
     }
-    
+
     /**
-     * 캐릭터명으로 ocid 조회 (내부 사용 메서드)
+     * 캐릭터명으로 ocid 조회
      */
     private String getCharacterOcid(String characterName) {
         try {
-            // API 호출
             String url = baseUrl + "/id?character_name=" + characterName;
-            
             HttpHeaders headers = new HttpHeaders();
             headers.set("x-nxopen-api-key", apiKey);
             HttpEntity<?> entity = new HttpEntity<>(headers);
-            
             ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
             Map<String, Object> result = response.getBody();
-            
             return result != null ? (String) result.get("ocid") : null;
         } catch (Exception e) {
             return null;
         }
     }
-    
+
     /**
-     * 계정 ID 생성 (캐릭터 이름 + 월드 기반)
-     * 캐릭터와 계정 매핑
+     * 랭킹 API를 통해 대표 캐릭터명(본캐) 추출
      */
-    private String generateAccountId(String characterName, String worldName) {
-        // 간단한 예: 캐릭터 이름과 월드를 조합하여 해시코드 생성
-        String baseString = characterName + "@" + worldName;
-        String accountId = "ACC_" + Math.abs(baseString.hashCode());
-        
-        return accountId;
+    private String getRepresentativeName(String worldName, String ocid, String dateStr) {
+        try {
+            String url = baseUrl + "/ranking/union"
+                    + "?date=" + dateStr
+                    + "&ocid=" + ocid
+                    + "&world_name=" + URLEncoder.encode(worldName, StandardCharsets.UTF_8);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("x-nxopen-api-key", apiKey);
+            HttpEntity<?> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+            Map<String, Object> body = response.getBody();
+            if (body == null || !body.containsKey("ranking")) return characterNameFallback(ocid); // fallback
+
+            List<Map<String, Object>> rankings = (List<Map<String, Object>>) body.get("ranking");
+            if (rankings.isEmpty()) return characterNameFallback(ocid);
+
+            return (String) rankings.get(0).get("character_name");
+        } catch (Exception e) {
+            return characterNameFallback(ocid); // fallback
+        }
+    }
+
+    /**
+     * 대표 캐릭터명 기준으로 묶인 캐릭터 목록을 DTO로 반환
+     */
+     public List<MapleCharacterResponseDto> findCharactersByRepresentative(String representativeName) {
+        return characterRepository.findByRepresentativeName(representativeName).stream()
+                .map(c -> MapleCharacterResponseDto.builder()
+                        .characterName(c.getCharacterName())
+                        .worldName(c.getWorldName())
+                        .characterClass(c.getCharacterClass())
+                        .ocid(c.getOcid())
+                        .representativeName(c.getRepresentativeName())
+                        .build())
+                .toList();
+    }
+
+    /**
+     * 랭킹 API 실패 시 fallback: 현재 캐릭터 이름 반환
+     */
+    private String characterNameFallback(String ocid) {
+        Optional<MapleCharacter> optional = characterRepository.findByOcid(ocid);
+        return optional.map(MapleCharacter::getCharacterName).orElse("UNKNOWN");
     }
 }
