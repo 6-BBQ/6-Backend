@@ -163,7 +163,7 @@ public class MapleService {
     /**
      * 대표 캐릭터명 기준으로 묶인 캐릭터 목록을 DTO로 반환
      */
-     public List<MapleCharacterResponseDto> findCharactersByRepresentative(String representativeName) {
+    public List<MapleCharacterResponseDto> findCharactersByRepresentative(String representativeName) {
         return characterRepository.findByRepresentativeName(representativeName).stream()
                 .map(c -> MapleCharacterResponseDto.builder()
                         .characterName(c.getCharacterName())
