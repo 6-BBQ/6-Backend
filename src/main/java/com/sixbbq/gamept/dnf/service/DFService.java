@@ -1,15 +1,16 @@
 package com.sixbbq.gamept.dnf.service;
 
 import com.sixbbq.gamept.dnf.dto.DFCharacterResponseDTO;
+import com.sixbbq.gamept.dnf.util.DFUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -23,107 +24,122 @@ public class DFService {
     @Value("${dnf.api.key}")
     private String apiKey;
 
+    private static final String WORD_TYPE_MATCH = "match";
+
     /**
-     * 캐릭터 이미지 URL 생성 메서드
-     * @param server 서버 ID
-     * @param characterId 캐릭터 ID
-     * @param zoom 이미지 확대 수준 (1~3)
-     * @return 이미지 URL 문자열
+     * 컨트롤러로부터 검색 요청을 받아 분기 처리하는 메서드
      */
-    private String buildImageUrl(String server, String characterId, int zoom) {
-        return String.format("https://img-api.neople.co.kr/df/servers/%s/characters/%s?zoom=%d", server, characterId, zoom);
+    public Map<String, Object> processSearchRequest(String serverIdParam, String nameParam) {
+        if ("adven".equalsIgnoreCase(serverIdParam)) {
+            return searchCharactersByAdventureName(nameParam); // 모험단명으로 검색
+        } else {
+            return searchCharacterByServerAndName(serverIdParam, nameParam); // 서버ID와 캐릭터명으로 검색
+        }
     }
 
-    public Map<String, Object> searchCharacter(String server, String name) {
-        try {
+    /**
+     * 모험단명으로 캐릭터 목록 검색
+     */
+    private Map<String, Object> searchCharactersByAdventureName(String adventureName) {
+        List<DFCharacterResponseDTO> membersInDB = dfCharacterService.findByAdventureName(adventureName);
+        List<Map<String, Object>> foundCharactersFromApi = new ArrayList<>();
 
-            // 1. server가 "adven"인 경우: 모험단명 기반 DB 검색
-            if ("adven".equalsIgnoreCase(server)) {
-                List<DFCharacterResponseDTO> members = dfCharacterService.findByAdventureName(name);
-                List<Map<String, Object>> allRows = new ArrayList<>();
+        for (DFCharacterResponseDTO member : membersInDB) {
+            String memberServerId = member.getServerId();
+            String memberCharacterName = member.getCharacterName();
 
-                for (DFCharacterResponseDTO member : members) {
-                    String sId = member.getServerId();
-                    String cName = member.getCharacterName();
+            String apiUrl = DFUtil.buildSearchCharacterApiUrl(memberServerId, memberCharacterName, apiKey, WORD_TYPE_MATCH);
 
-                    String url = UriComponentsBuilder
-                            .fromUriString("https://api.neople.co.kr/df/servers/{server}/characters")
-                            .queryParam("characterName", cName)
-                            .queryParam("apikey", apiKey)
-                            .buildAndExpand(sId)
-                            .toUriString();
+            try {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> apiResponseData = restTemplate.getForObject(apiUrl, Map.class);
 
-                    Map<String, Object> result = restTemplate.getForObject(url, Map.class);
-                    List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get("rows");
+                if (apiResponseData != null) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> rows = (List<Map<String, Object>>) apiResponseData.get("rows");
 
                     if (rows != null && !rows.isEmpty()) {
-                        Map<String, Object> character = rows.get(0);
+                        for (Map<String, Object> apiCharacterInfo : rows) {
+                            String apiCharacterId = (String) apiCharacterInfo.get("characterId");
+                            String apiServerId = (String) apiCharacterInfo.get("serverId");
 
-                        String characterId = (String) character.get("characterId");
-                        String serverId = (String) character.get("serverId");
-
-                        String imageUrl = buildImageUrl(serverId, characterId, 1);
-                        character.put("imageUrl", imageUrl);
-
-                        allRows.add(character);
+                            if (member.getCharacterId().equals(apiCharacterId) && member.getServerId().equals(apiServerId)) {
+                                String imageUrl = DFUtil.buildCharacterImageUrl(apiServerId, apiCharacterId, 1);
+                                apiCharacterInfo.put("imageUrl", imageUrl);
+                                foundCharactersFromApi.add(apiCharacterInfo);
+                                break;
+                            }
+                        }
                     }
                 }
-
-                return Map.of("rows", allRows);
+            } catch (Exception e) {
+                System.err.println("모험단 내 캐릭터 '" + memberCharacterName + "'(" + memberServerId + ") 조회 실패: " + e.getMessage());
             }
-
-            // 2. 일반 검색 (server + characterName)
-            String url = UriComponentsBuilder
-                    .fromUriString("https://api.neople.co.kr/df/servers/{server}/characters")
-                    .queryParam("characterName", name)
-                    .queryParam("apikey", apiKey)
-                    .buildAndExpand(server)
-                    .toUriString();
-
-            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, null, Map.class);
-            Map<String, Object> result = response.getBody();
-
-            List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get("rows");
-            if (rows != null && !rows.isEmpty()) {
-                for (Map<String, Object> character : rows) {
-                    String characterId = (String) character.get("characterId");
-                    String serverId = (String) character.get("serverId");
-
-                    String imageUrl = buildImageUrl(serverId, characterId, 1);
-                    character.put("imageUrl", imageUrl);
-                }
-            }
-
-            return result;
-
-        } catch (Exception e) {
-            throw new RuntimeException("던파 캐릭터 조회 실패: " + e.getMessage());
         }
+        return Map.of("rows", foundCharactersFromApi);
     }
 
-    public Map<String, Object> getCharacterInfo(String server, String characterId) {
+    /**
+     * 서버ID와 캐릭터명으로 캐릭터 검색
+     */
+    private Map<String, Object> searchCharacterByServerAndName(String serverId, String characterName) {
+        String apiUrl = DFUtil.buildSearchCharacterApiUrl(serverId, characterName, apiKey, WORD_TYPE_MATCH);
+
         try {
-            String url = UriComponentsBuilder
-                    .fromUriString("https://api.neople.co.kr/df/servers/{server}/characters/{characterId}")
-                    .queryParam("apikey", apiKey)
-                    .buildAndExpand(server, characterId)
-                    .toUriString();
+            ResponseEntity<Map> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, null, Map.class);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> apiResponseData = responseEntity.getBody();
 
-            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, null, Map.class);
-            Map<String, Object> result = response.getBody();
-            if (result != null) {
-                String characterName = (String) result.get("characterName");
-                String adventureName = (String) result.get("adventureName");
-                dfCharacterService.saveOrUpdate(characterId, characterName, server, adventureName);
-
-                String imageUrl = buildImageUrl(server, characterId, 2);
-                result.put("imageUrl", imageUrl);
+            if (apiResponseData != null) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> rows = (List<Map<String, Object>>) apiResponseData.get("rows");
+                if (rows != null && !rows.isEmpty()) {
+                    for (Map<String, Object> apiCharacterInfo : rows) {
+                        String charId = (String) apiCharacterInfo.get("characterId");
+                        String charServerId = (String) apiCharacterInfo.get("serverId");
+                        String imageUrl = DFUtil.buildCharacterImageUrl(charServerId, charId, 1);
+                        apiCharacterInfo.put("imageUrl", imageUrl);
+                    }
+                }
+                return apiResponseData;
             }
-
-            return result;
+            return Map.of("rows", Collections.emptyList());
         } catch (Exception e) {
-            throw new RuntimeException("던파 캐릭터 조회 실패: " + e.getMessage());
+            System.err.println("캐릭터 검색 실패 ("+ serverId +", "+ characterName +"): " + e.getMessage());
+            return Map.of("rows", Collections.emptyList(), "error", "캐릭터 검색 중 오류가 발생했습니다.");
         }
     }
 
+    /**
+     * 캐릭터 상세 정보 조회
+     */
+    public Map<String, Object> getCharacterInfo(String serverId, String characterId) {
+        String apiUrl = DFUtil.buildCharacterInfoApiUrl(serverId, characterId, apiKey);
+
+        try {
+            ResponseEntity<Map> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, null, Map.class);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> characterDetails = responseEntity.getBody();
+
+            if (characterDetails != null) {
+                String charName = (String) characterDetails.get("characterName");
+                String advName = (String) characterDetails.get("adventureName");
+                String apiServerId = (String) characterDetails.get("serverId"); // API 응답의 서버 ID 사용
+
+                if (charName != null && advName != null && apiServerId != null) {
+                    // DB 저장 시 API 응답에서 받은 serverId를 사용하는 것이 더 정확할 수 있음
+                    dfCharacterService.saveOrUpdate(characterId, charName, apiServerId, advName);
+                }
+
+                String imageUrl = DFUtil.buildCharacterImageUrl(apiServerId, characterId, 2);
+                characterDetails.put("imageUrl", imageUrl);
+
+                return characterDetails;
+            }
+            return Collections.emptyMap();
+        } catch (Exception e) {
+            System.err.println("캐릭터 상세 정보 조회 실패 ("+ serverId +", "+ characterId +"): " + e.getMessage());
+            return Map.of("error", "캐릭터 상세 정보 조회 중 오류가 발생했습니다.");
+        }
+    }
 }

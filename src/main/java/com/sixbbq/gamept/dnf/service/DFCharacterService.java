@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,13 +19,13 @@ public class DFCharacterService {
 
     @Transactional
     public void saveOrUpdate(String characterId, String characterName, String serverId, String adventureName) {
-        DFCharacter dfCharacter = dfCharacterRepository
+        DFCharacter characterToSave = dfCharacterRepository
                 .findByCharacterIdAndServerId(characterId, serverId)
-                .map(existing -> {
-                    existing.setCharacterName(characterName);
-                    existing.setAdventureName(adventureName);
-                    existing.setLastUpdated(LocalDateTime.now());
-                    return existing;
+                .map(existingCharacter -> {
+                    existingCharacter.setCharacterName(characterName);
+                    existingCharacter.setAdventureName(adventureName);
+                    existingCharacter.setLastUpdated(LocalDateTime.now());
+                    return existingCharacter;
                 })
                 .orElse(DFCharacter.builder()
                         .characterId(characterId)
@@ -34,9 +35,10 @@ public class DFCharacterService {
                         .lastUpdated(LocalDateTime.now())
                         .build());
 
-        dfCharacterRepository.save(dfCharacter);
+        dfCharacterRepository.save(characterToSave);
     }
 
+    @Transactional(readOnly = true)
     public List<DFCharacterResponseDTO> findByAdventureName(String adventureName) {
         return dfCharacterRepository.findByAdventureName(adventureName)
                 .stream()
@@ -47,6 +49,6 @@ public class DFCharacterService {
                         .adventureName(dfCharacter.getAdventureName())
                         .lastUpdated(dfCharacter.getLastUpdated())
                         .build())
-                .toList();
+                .collect(Collectors.toList());
     }
 }
