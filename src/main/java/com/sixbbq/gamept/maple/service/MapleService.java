@@ -37,28 +37,30 @@ public class MapleService {
     @Transactional
     public Map<String, Object> searchCharacter(String characterName) {
         Map<String, Object> result = new HashMap<>();
-        
-        // 1. DB에서 먼저 확인
-        Optional<MapleCharacter> existingCharacter = characterRepository.findByCharacterName(characterName);
-        if (existingCharacter.isPresent()) {
-            MapleCharacter character = existingCharacter.get();
-            result.put("ocid", character.getOcid());
-            result.put("characterName", character.getCharacterName());
-            result.put("worldName", character.getWorldName());
-            result.put("characterClass", character.getCharacterClass());
-            return result;
-        }
-        
-        // 2. API 호출로 ocid 조회
+
+        // 1. 캐릭터명 → ocid 조회
         String ocid = getCharacterOcid(characterName);
         if (ocid == null) {
             result.put("error", "캐릭터를 찾을 수 없습니다");
             return result;
         }
-        
-        // 기본 정보 반환
+
+        // 2. ocid → 캐릭터 기본 정보 조회
+        Map<String, Object> info = getCharacterInfo(ocid);
+        if (info == null || info.get("character_name") == null) {
+            result.put("error", "캐릭터 기본 정보를 가져올 수 없습니다");
+            return result;
+        }
+
+        // 3. 응답 구성
         result.put("ocid", ocid);
-        result.put("characterName", characterName);
+        result.put("characterName", info.get("character_name"));
+        result.put("worldName", info.get("world_name"));
+        result.put("characterLevel", info.get("character_level"));
+        result.put("characterClass", info.get("character_class"));
+        result.put("characterGender", info.get("character_gender"));
+        result.put("characterImage", info.get("character_image"));
+
         return result;
     }
 
