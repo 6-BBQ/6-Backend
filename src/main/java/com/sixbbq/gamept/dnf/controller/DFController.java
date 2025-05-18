@@ -16,32 +16,18 @@ public class DFController {
     private final DFService dfService;
 
     /**
-     * [가능한 서버 ID 목록]
-     *  - all       : 전체
-     *  - cain      : 카인
-     *  - diregie   : 디레지에
-     *  - siroco    : 시로코
-     *  - prey      : 프레이
-     *  - casillas  : 카시야스
-     *  - hilder    : 힐더
-     *  - anton     : 안톤
-     *  - bakal     : 바칼
-     *  - adven     : 모험단
-     */
-
-    /**
      * 1. 던파 캐릭터 검색 API
      *
      * [요청 방식]
-     * GET /api/df/search?server={serverId}&name={characterName}
+     * GET /api/df/search?server={serverId}&name={characterNameOrAdventureName}
      *
-     * @param server 서버 ID (영문 식별자, 목록 참조) // 모험단
-     * @param name   캐릭터 이름 // 모험단명
-     * @return       캐릭터 ID, 요약된 정보 (JSON)
+     * @param server 서버 ID (영문 식별자, 목록 참조. "adven"일 경우 모험단 검색)
+     * @param name   캐릭터 이름 또는 모험단명 (server가 "adven"일 경우 모험단명)
+     * @return       검색된 캐릭터 목록 또는 단일 캐릭터 정보 (JSON)
      */
     @GetMapping("/search")
     public ResponseEntity<?> searchCharacter(@RequestParam String server, @RequestParam String name) {
-        return ResponseEntity.ok(dfService.searchCharacter(server, name));
+        return ResponseEntity.ok(dfService.processSearchRequest(server, name));
     }
 
     /**
@@ -52,7 +38,7 @@ public class DFController {
      *
      * @param server      서버 ID (영문 식별자)
      * @param characterId 캐릭터 ID
-     * @return            이름, 레벨, 직업, 이미지 URL 등 기본 정보 (JSON)
+     * @return            캐릭터 상세 정보 (JSON)
      */
     @GetMapping("/character")
     public ResponseEntity<?> getCharacterInfo(@RequestParam String server, @RequestParam String characterId) {
