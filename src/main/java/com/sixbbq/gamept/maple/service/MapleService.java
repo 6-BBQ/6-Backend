@@ -69,7 +69,7 @@ public class MapleService {
      */
     @Transactional
     public Map<String, Object> getCharacterInfo(String ocid) {
-        LocalDate date = LocalDate.now().minusDays(1);
+        LocalDate date = LocalDate.now().minusDays(2);
         String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         String basicUrl = baseUrl + "/character/basic?ocid=" + ocid + "&date=" + dateStr;
 
