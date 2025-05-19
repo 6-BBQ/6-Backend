@@ -17,17 +17,17 @@ import java.util.Map;
 public class LoaService {
     @Value("${loa.api.token}")
     private String token;
+    @Value("${loa.api.base-url}")
+    private String baseUrl;
 
     private final RestTemplate restTemplate;
-    private final LoaApiUrlProvider urlProvider;
 
-    public LoaService(RestTemplate restTemplate, LoaApiUrlProvider urlProvider) {
+    public LoaService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        this.urlProvider = urlProvider;
     }
 
     public List<CharacterInfoResponseDTO> getRoster(String characterName) {
-        String url = urlProvider.getCharacterRoasterUrl(characterName);
+        String url = LoaApiUrlProvider.getCharacterRoasterUrl(baseUrl, characterName);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "bearer " + token);
@@ -53,7 +53,7 @@ public class LoaService {
     }
 
     public Map<String, Object> getCharacterInfo(String characterName, String filter) {
-        String url = urlProvider.getCharacterInfoUrl(characterName, filter);
+        String url = LoaApiUrlProvider.getCharacterInfoUrl(baseUrl, characterName, filter);
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "bearer " + token);

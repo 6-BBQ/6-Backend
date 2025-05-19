@@ -23,8 +23,12 @@ public class DFService {
 
     @Value("${dnf.api.key}")
     private String apiKey;
+    @Value("${dnf.api.base-url}")
+    private String NEOPLE_API_BASE_URL;
+    @Value("${dnf.api.image-base-url}")
+    private String CHARACTER_IMAGE_BASE_URL;
 
-    private static final String WORD_TYPE_MATCH = "match";
+    private final String WORD_TYPE_MATCH = "match";
 
     /**
      * 컨트롤러로부터 검색 요청을 받아 분기 처리하는 메서드
@@ -48,7 +52,7 @@ public class DFService {
             String memberServerId = member.getServerId();
             String memberCharacterName = member.getCharacterName();
 
-            String apiUrl = DFUtil.buildSearchCharacterApiUrl(memberServerId, memberCharacterName, apiKey, WORD_TYPE_MATCH);
+            String apiUrl = DFUtil.buildSearchCharacterApiUrl(NEOPLE_API_BASE_URL, memberServerId, memberCharacterName, apiKey, WORD_TYPE_MATCH);
 
             try {
                 @SuppressWarnings("unchecked")
@@ -64,7 +68,7 @@ public class DFService {
                             String apiServerId = (String) apiCharacterInfo.get("serverId");
 
                             if (member.getCharacterId().equals(apiCharacterId) && member.getServerId().equals(apiServerId)) {
-                                String imageUrl = DFUtil.buildCharacterImageUrl(apiServerId, apiCharacterId, 1);
+                                String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, apiServerId, apiCharacterId, 1);
                                 apiCharacterInfo.put("imageUrl", imageUrl);
                                 foundCharactersFromApi.add(apiCharacterInfo);
                                 break;
@@ -84,7 +88,7 @@ public class DFService {
      * 서버ID와 캐릭터명으로 캐릭터 검색
      */
     private Map<String, Object> searchCharacterByServerAndName(String serverId, String characterName) {
-        String apiUrl = DFUtil.buildSearchCharacterApiUrl(serverId, characterName, apiKey, WORD_TYPE_MATCH);
+        String apiUrl = DFUtil.buildSearchCharacterApiUrl(NEOPLE_API_BASE_URL, serverId, characterName, apiKey, WORD_TYPE_MATCH);
 
         try {
             ResponseEntity<Map> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, null, Map.class);
@@ -98,7 +102,7 @@ public class DFService {
                     for (Map<String, Object> apiCharacterInfo : rows) {
                         String charId = (String) apiCharacterInfo.get("characterId");
                         String charServerId = (String) apiCharacterInfo.get("serverId");
-                        String imageUrl = DFUtil.buildCharacterImageUrl(charServerId, charId, 1);
+                        String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, charServerId, charId, 1);
                         apiCharacterInfo.put("imageUrl", imageUrl);
                     }
                 }
@@ -115,7 +119,7 @@ public class DFService {
      * 캐릭터 상세 정보 조회
      */
     public Map<String, Object> getCharacterInfo(String serverId, String characterId) {
-        String apiUrl = DFUtil.buildCharacterInfoApiUrl(serverId, characterId, apiKey);
+        String apiUrl = DFUtil.buildCharacterInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey);
 
         try {
             ResponseEntity<Map> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, null, Map.class);
@@ -132,7 +136,7 @@ public class DFService {
                     dfCharacterService.saveOrUpdate(characterId, charName, apiServerId, advName);
                 }
 
-                String imageUrl = DFUtil.buildCharacterImageUrl(apiServerId, characterId, 2);
+                String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, apiServerId, characterId, 2);
                 characterDetails.put("imageUrl", imageUrl);
 
                 return characterDetails;
