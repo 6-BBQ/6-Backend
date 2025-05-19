@@ -3,10 +3,10 @@ package com.sixbbq.gamept.api.dnf.controller;
 import com.sixbbq.gamept.api.dnf.service.DFService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/api/df")
@@ -27,7 +27,11 @@ public class DFController {
      */
     @GetMapping("/search")
     public ResponseEntity<?> searchCharacter(@RequestParam String server, @RequestParam String name) {
-        return ResponseEntity.ok(dfService.processSearchRequest(server, name));
+        try {
+            return ResponseEntity.ok(dfService.processSearchRequest(server, name));
+        } catch (Exception e) {
+            throw new NoSuchElementException(e);
+        }
     }
 
     /**
@@ -42,6 +46,22 @@ public class DFController {
      */
     @GetMapping("/character")
     public ResponseEntity<?> getCharacterInfo(@RequestParam String server, @RequestParam String characterId) {
-        return ResponseEntity.ok(dfService.getCharacterInfo(server, characterId));
+        try {
+            return ResponseEntity.ok(dfService.getCharacterInfo(server, characterId));
+        } catch (Exception e) {
+            throw new NoSuchElementException(e);
+        }
+
+    }
+
+    /**
+     * 에러 발생 시 오게되는 공통 Exception
+     * @param e 처리할 exception
+     * @return 404코드로 에러 데이터 넣어서 처리
+     */
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<?> handleException(Exception e) {
+        Map<String, String> error = Map.of("error", e.getMessage());
+        return ResponseEntity.badRequest().body(error);
     }
 }

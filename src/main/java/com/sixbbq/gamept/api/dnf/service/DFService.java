@@ -3,21 +3,21 @@ package com.sixbbq.gamept.api.dnf.service;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.util.DFUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class DFService {
 
+    private static final Logger log = LoggerFactory.getLogger(DFService.class);
     private final RestTemplate restTemplate;
     private final DFCharacterService dfCharacterService;
 
@@ -33,7 +33,7 @@ public class DFService {
     /**
      * 컨트롤러로부터 검색 요청을 받아 분기 처리하는 메서드
      */
-    public Map<String, Object> processSearchRequest(String serverIdParam, String nameParam) {
+    public Map<String, Object> processSearchRequest(String serverIdParam, String nameParam) throws Exception {
         if ("adven".equalsIgnoreCase(serverIdParam)) {
             return searchCharactersByAdventureName(nameParam); // 모험단명으로 검색
         } else {
@@ -44,7 +44,7 @@ public class DFService {
     /**
      * 모험단명으로 캐릭터 목록 검색
      */
-    private Map<String, Object> searchCharactersByAdventureName(String adventureName) {
+    private Map<String, Object> searchCharactersByAdventureName(String adventureName) throws Exception{
         List<DFCharacterResponseDTO> membersInDB = dfCharacterService.findByAdventureName(adventureName);
         List<Map<String, Object>> foundCharactersFromApi = new ArrayList<>();
 
@@ -77,8 +77,8 @@ public class DFService {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("모험단 내 캐릭터 '" + memberCharacterName + "'(" + memberServerId + ") 조회 실패: " + e.getMessage());
-                return Map.of("rows", Collections.emptyList(), "error", "캐릭터 검색 중 오류가 발생했습니다.");
+                log.error("모험단 내 캐릭터 '" + memberCharacterName + "'(" + memberServerId + ") 조회 실패: " + e.getMessage());
+                throw new NoSuchElementException("캐릭터 검색 중 오류가 발생했습니다.");
             }
         }
         return Map.of("rows", foundCharactersFromApi);
@@ -87,7 +87,7 @@ public class DFService {
     /**
      * 서버ID와 캐릭터명으로 캐릭터 검색
      */
-    private Map<String, Object> searchCharacterByServerAndName(String serverId, String characterName) {
+    private Map<String, Object> searchCharacterByServerAndName(String serverId, String characterName) throws Exception{
         String apiUrl = DFUtil.buildSearchCharacterApiUrl(NEOPLE_API_BASE_URL, serverId, characterName, apiKey, WORD_TYPE_MATCH);
 
         try {
@@ -110,15 +110,15 @@ public class DFService {
             }
             return Map.of("rows", Collections.emptyList());
         } catch (Exception e) {
-            System.err.println("캐릭터 검색 실패 ("+ serverId +", "+ characterName +"): " + e.getMessage());
-            return Map.of("rows", Collections.emptyList(), "error", "캐릭터 검색 중 오류가 발생했습니다.");
+            log.error("캐릭터 검색 실패 ("+ serverId +", "+ characterName +"): " + e.getMessage());
+            throw new NoSuchElementException("캐릭터 검색 중 오류가 발생했습니다.");
         }
     }
 
     /**
      * 캐릭터 상세 정보 조회
      */
-    public Map<String, Object> getCharacterInfo(String serverId, String characterId) {
+    public Map<String, Object> getCharacterInfo(String serverId, String characterId) throws Exception {
         String apiUrl = DFUtil.buildCharacterInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey);
 
         try {
@@ -143,8 +143,8 @@ public class DFService {
             }
             return Collections.emptyMap();
         } catch (Exception e) {
-            System.err.println("캐릭터 상세 정보 조회 실패 ("+ serverId +", "+ characterId +"): " + e.getMessage());
-            return Map.of("error", "캐릭터 상세 정보 조회 중 오류가 발생했습니다.");
+            log.error("캐릭터 상세 정보 조회 실패 ("+ serverId +", "+ characterId +"): " + e.getMessage());
+            throw new NoSuchElementException("캐릭터 상세 정보 조회 중 오류가 발생했습니다.");
         }
     }
 }

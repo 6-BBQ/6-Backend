@@ -10,9 +10,10 @@ public class LoaApiUrlProvider {
 
     public static String getCharacterInfoUrl(String baseUrl, String characterName, String filter) {
         if(filter == null || filter.isEmpty())
-            return baseUrl + "/armories/characters/" + characterName;
+
+            return String.format("%s/armories/characters/%s", baseUrl, characterName);
         else {
-            return baseUrl + "/armories/characters/" + characterName + "/" + filter;
+            return String.format("%s/armories/characters/%s/%s", baseUrl, characterName, filter);
         }
     }
 
