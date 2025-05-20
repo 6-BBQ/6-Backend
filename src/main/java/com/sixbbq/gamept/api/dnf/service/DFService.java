@@ -3,7 +3,6 @@ package com.sixbbq.gamept.api.dnf.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.creature.Creature;
-import com.sixbbq.gamept.api.dnf.dto.equip.SetItemInfo;
 import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
 import com.sixbbq.gamept.api.dnf.dto.type.CharacterDetailType;
 import com.sixbbq.gamept.api.dnf.util.DFUtil;
