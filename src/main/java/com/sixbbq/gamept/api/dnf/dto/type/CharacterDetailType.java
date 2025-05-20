@@ -4,8 +4,8 @@ public enum CharacterDetailType {
     EQUIPMENT("equipment"),
     AVATAR("avatar"),
     CREATURE("creature"),
-    FLAG("flag");
-//    TALISMAN("talisman");
+    FLAG("flag"),
+    TALISMAN("talisman");
 
     private final String value;
 

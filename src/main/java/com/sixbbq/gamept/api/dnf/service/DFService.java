@@ -2,7 +2,6 @@ package com.sixbbq.gamept.api.dnf.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
-import com.sixbbq.gamept.api.dnf.dto.avatar.Avatar;
 import com.sixbbq.gamept.api.dnf.dto.creature.Creature;
 import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
 import com.sixbbq.gamept.api.dnf.dto.type.CharacterDetailType;
@@ -166,9 +165,9 @@ public class DFService {
                         case FLAG:
                             dto.setFlag(objectMapper.convertValue(characterDetails.get("flag"), Flag.class));
                             break;
-//                        case TALISMAN:
-//                            dto.setTalisman(objectMapper.convertValue(characterDetails.get("talisman"), TalismanDTO.class));
-//                            break;
+                        case TALISMAN:
+                            dto.setTalismans(objectMapper.convertValue(characterDetails.get("talismans"), new TypeReference<>() {}));
+                            break;
                     }
                 }
 
