@@ -3,6 +3,7 @@ package com.sixbbq.gamept.api.dnf.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.creature.Creature;
+import com.sixbbq.gamept.api.dnf.dto.equip.SetItemInfo;
 import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
 import com.sixbbq.gamept.api.dnf.dto.type.CharacterDetailType;
 import com.sixbbq.gamept.api.dnf.util.DFUtil;
@@ -136,13 +137,8 @@ public class DFService {
                 ObjectMapper objectMapper = new ObjectMapper();
 
                 dto = objectMapper.convertValue(characterDetails, DFCharacterResponseDTO.class);
-//                String charName = (String) characterDetails.get("characterName");
-//                String advName = (String) characterDetails.get("adventureName");
-//                String apiServerId = (String) characterDetails.get("serverId"); // API 응답의 서버 ID 사용
 
                 if (dto.getCharacterName() != null && dto.getAdventureName() != null && dto.getServerId() != null) {
-                    // DB 저장 시 API 응답에서 받은 serverId를 사용하는 것이 더 정확할 수 있음
-//                    dfCharacterService.saveOrUpdate(characterId, charName, apiServerId, advName);
                     dfCharacterService.saveOrUpdate(characterId, dto);
                 }
 
@@ -155,6 +151,7 @@ public class DFService {
                     switch (type) {
                         case EQUIPMENT:
                             dto.setEquipment(objectMapper.convertValue(characterDetails.get("equipment"), new TypeReference<>() {}));
+                            dto.setSetItemInfo(objectMapper.convertValue(characterDetails.get("setItemInfo"), new TypeReference<>() {}));
                             break;
                         case AVATAR:
                             dto.setAvatar(objectMapper.convertValue(characterDetails.get("avatar"), new TypeReference<>() {}));

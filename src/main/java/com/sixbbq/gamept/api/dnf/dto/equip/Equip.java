@@ -24,6 +24,5 @@ public class Equip {
     private FusionOption fusionOption;
     private List<Tune> tune;
     private UpgradeInfo upgradeInfo;
-    private SetItemInfo setItemInfo;
 
 }

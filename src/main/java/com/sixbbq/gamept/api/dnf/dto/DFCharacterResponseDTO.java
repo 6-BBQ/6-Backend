@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.sixbbq.gamept.api.dnf.dto.avatar.Avatar;
 import com.sixbbq.gamept.api.dnf.dto.creature.Creature;
 import com.sixbbq.gamept.api.dnf.dto.equip.Equip;
+import com.sixbbq.gamept.api.dnf.dto.equip.SetItemInfo;
 import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
 import com.sixbbq.gamept.api.dnf.dto.talisman.Talismans;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,7 @@ public class DFCharacterResponseDTO {
     private String guildName;
     private LocalDateTime lastUpdated;
     private List<Equip> equipment;
+    private List<SetItemInfo> setItemInfo;
     private List<Avatar> avatar;
     private Creature creature;
     private Flag flag;
