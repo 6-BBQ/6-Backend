@@ -1,5 +1,6 @@
 package com.sixbbq.gamept.api.dnf.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.util.DFUtil;
 import lombok.RequiredArgsConstructor;
@@ -118,33 +119,46 @@ public class DFService {
     /**
      * 캐릭터 상세 정보 조회
      */
-    public Map<String, Object> getCharacterInfo(String serverId, String characterId) {
-        String apiUrl = DFUtil.buildCharacterInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey);
-
+    public DFCharacterResponseDTO getCharacterInfo(String serverId, String characterId) {
         try {
+            String apiUrl = DFUtil.buildCharacterStatusApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey);
+
             ResponseEntity<Map> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, null, Map.class);
             @SuppressWarnings("unchecked")
             Map<String, Object> characterDetails = responseEntity.getBody();
+            DFCharacterResponseDTO dto = null;
 
             if (characterDetails != null) {
-                String charName = (String) characterDetails.get("characterName");
-                String advName = (String) characterDetails.get("adventureName");
-                String apiServerId = (String) characterDetails.get("serverId"); // API 응답의 서버 ID 사용
+                ObjectMapper objectMapper = new ObjectMapper();
 
-                if (charName != null && advName != null && apiServerId != null) {
+                dto = objectMapper.convertValue(characterDetails, DFCharacterResponseDTO.class);
+//                String charName = (String) characterDetails.get("characterName");
+//                String advName = (String) characterDetails.get("adventureName");
+//                String apiServerId = (String) characterDetails.get("serverId"); // API 응답의 서버 ID 사용
+
+                if (dto.getCharacterName() != null && dto.getAdventureName() != null && dto.getServerId() != null) {
                     // DB 저장 시 API 응답에서 받은 serverId를 사용하는 것이 더 정확할 수 있음
-                    dfCharacterService.saveOrUpdate(characterId, charName, apiServerId, advName);
+//                    dfCharacterService.saveOrUpdate(characterId, charName, apiServerId, advName);
+                    dfCharacterService.saveOrUpdate(characterId, dto);
                 }
 
-                String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, apiServerId, characterId, 2);
-                characterDetails.put("imageUrl", imageUrl);
+                apiUrl = DFUtil.buildCharacterDetailInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, "equipment");
+                responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, null, Map.class);
 
-                return characterDetails;
+                characterDetails = responseEntity.getBody();
+                dto = objectMapper.convertValue(characterDetails, DFCharacterResponseDTO.class);
+
+                String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, dto.getServerId(), characterId, 2);
+                dto.setImageUrl(imageUrl);
+                characterDetails.put("imageUrl", imageUrl);
             }
-            return Collections.emptyMap();
+
+            return dto;
         } catch (Exception e) {
             log.error("캐릭터 상세 정보 조회 실패 ("+ serverId +", "+ characterId +"): " + e.getMessage());
             throw new NoSuchElementException("캐릭터 상세 정보 조회 중 오류가 발생했습니다.");
         }
     }
+
+
 }
