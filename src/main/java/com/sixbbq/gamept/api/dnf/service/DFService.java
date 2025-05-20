@@ -2,8 +2,12 @@ package com.sixbbq.gamept.api.dnf.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
+import com.sixbbq.gamept.api.dnf.dto.buffAvatar.BuffAvatar;
+import com.sixbbq.gamept.api.dnf.dto.buffCreature.BuffCreature;
 import com.sixbbq.gamept.api.dnf.dto.creature.Creature;
 import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
+import com.sixbbq.gamept.api.dnf.dto.buffEquip.BuffSkill;
+import com.sixbbq.gamept.api.dnf.dto.skill.Skill;
 import com.sixbbq.gamept.api.dnf.dto.type.CharacterDetailType;
 import com.sixbbq.gamept.api.dnf.util.DFUtil;
 import lombok.RequiredArgsConstructor;
@@ -142,7 +146,17 @@ public class DFService {
                 }
 
                 for (CharacterDetailType type : CharacterDetailType.values()) {
-                    apiUrl = DFUtil.buildCharacterDetailInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, type.getValue());
+                    if (type == CharacterDetailType.SKILL) {
+                        apiUrl = DFUtil.buildCharacterSkillStyleApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey);
+                    } else if (type == CharacterDetailType.BUFF_EQUIPMENT) {
+                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, "equipment");
+                    } else if (type == CharacterDetailType.BUFF_AVATAR) {
+                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, "avatar");
+                    } else if (type == CharacterDetailType.BUFF_CREATURE) {
+                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, "creature");
+                    } else {
+                        apiUrl = DFUtil.buildCharacterDetailInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, type.getValue());
+                    }
                     responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, null, Map.class);
 
                     characterDetails = responseEntity.getBody();
@@ -164,9 +178,38 @@ public class DFService {
                         case TALISMAN:
                             dto.setTalismans(objectMapper.convertValue(characterDetails.get("talismans"), new TypeReference<>() {}));
                             break;
+                        case SKILL:
+                            dto.setSkill(objectMapper.convertValue(characterDetails.get("skill"), Skill.class));
+                            break;
+                        case BUFF_EQUIPMENT:
+                            if (dto.getSkill() == null) dto.setSkill(new Skill());
+                            dto.getSkill().setBuff(objectMapper.convertValue(
+                                    ((Map<?, ?>) ((Map<?, ?>) characterDetails.get("skill")).get("buff")), BuffSkill.class));
+                            break;
+                        case BUFF_AVATAR:
+                            if (dto.getSkill() == null) dto.setSkill(new Skill());
+                            Map<String, Object> buffMapAvatar = (Map<String, Object>) ((Map<?, ?>) characterDetails.get("skill")).get("buff");
+                            if (dto.getSkill().getBuff() == null) {
+                                dto.getSkill().setBuff(objectMapper.convertValue(buffMapAvatar, BuffSkill.class));
+                            } else {
+                                dto.getSkill().getBuff().setAvatar(
+                                        objectMapper.convertValue(buffMapAvatar.get("avatar"), new TypeReference<List<BuffAvatar>>() {}));
+                            }
+                            break;
+                        case BUFF_CREATURE:
+                            if (dto.getSkill() == null) dto.setSkill(new Skill());
+                            Map<String, Object> buffMapCreature = (Map<String, Object>) ((Map<?, ?>) characterDetails.get("skill")).get("buff");
+                            if (dto.getSkill().getBuff() == null) {
+                                dto.getSkill().setBuff(objectMapper.convertValue(buffMapCreature, BuffSkill.class));
+                            } else {
+                                dto.getSkill().getBuff().setCreature(
+                                        objectMapper.convertValue(buffMapCreature.get("creature"), new TypeReference<List<BuffCreature>>() {}));
+                            }
+                            break;
+
                     }
                 }
-
+                
                 String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, dto.getServerId(), characterId, 2);
                 dto.setImageUrl(imageUrl);
                 characterDetails.put("imageUrl", imageUrl);

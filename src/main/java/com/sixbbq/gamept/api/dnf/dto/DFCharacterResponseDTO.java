@@ -6,6 +6,7 @@ import com.sixbbq.gamept.api.dnf.dto.creature.Creature;
 import com.sixbbq.gamept.api.dnf.dto.equip.Equip;
 import com.sixbbq.gamept.api.dnf.dto.equip.SetItemInfo;
 import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
+import com.sixbbq.gamept.api.dnf.dto.skill.Skill;
 import com.sixbbq.gamept.api.dnf.dto.talisman.Talismans;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,4 +36,5 @@ public class DFCharacterResponseDTO {
     private Creature creature;
     private Flag flag;
     private List<Talismans> talismans;
+    private Skill skill;
 }

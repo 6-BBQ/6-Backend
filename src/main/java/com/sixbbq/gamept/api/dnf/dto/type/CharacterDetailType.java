@@ -5,7 +5,11 @@ public enum CharacterDetailType {
     AVATAR("avatar"),
     CREATURE("creature"),
     FLAG("flag"),
-    TALISMAN("talisman");
+    TALISMAN("talisman"),
+    SKILL("skill/style"),
+    BUFF_EQUIPMENT("skill/buff/equip/equipment"),
+    BUFF_AVATAR("skill/buff/equip/avatar"),
+    BUFF_CREATURE("skill/buff/equip/creature");
 
     private final String value;
 
