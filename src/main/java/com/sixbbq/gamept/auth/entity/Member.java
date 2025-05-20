@@ -1,4 +1,4 @@
-package com.sixbbq.gamept.member.entity;
+package com.sixbbq.gamept.auth.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -14,10 +14,7 @@ import java.time.LocalDateTime;
 public class Member {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String userId;
 
     @Column(nullable = false)
