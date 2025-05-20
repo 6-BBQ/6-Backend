@@ -3,6 +3,8 @@ package com.sixbbq.gamept.api.dnf.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.avatar.Avatar;
+import com.sixbbq.gamept.api.dnf.dto.creature.Creature;
+import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
 import com.sixbbq.gamept.api.dnf.dto.type.CharacterDetailType;
 import com.sixbbq.gamept.api.dnf.util.DFUtil;
 import lombok.RequiredArgsConstructor;
@@ -158,12 +160,12 @@ public class DFService {
                         case AVATAR:
                             dto.setAvatar(objectMapper.convertValue(characterDetails.get("avatar"), new TypeReference<>() {}));
                             break;
-//                        case CREATURE:
-//                            dto.setCreature(objectMapper.convertValue(characterDetails.get("creature"), CreatureDTO.class));
-//                            break;
-//                        case FLAG:
-//                            dto.setFlag(objectMapper.convertValue(characterDetails.get("flag"), FlagDTO.class));
-//                            break;
+                        case CREATURE:
+                            dto.setCreature(objectMapper.convertValue(characterDetails.get("creature"), Creature.class));
+                            break;
+                        case FLAG:
+                            dto.setFlag(objectMapper.convertValue(characterDetails.get("flag"), Flag.class));
+                            break;
 //                        case TALISMAN:
 //                            dto.setTalisman(objectMapper.convertValue(characterDetails.get("talisman"), TalismanDTO.class));
 //                            break;
