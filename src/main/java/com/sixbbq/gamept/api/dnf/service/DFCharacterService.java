@@ -38,6 +38,27 @@ public class DFCharacterService {
         dfCharacterRepository.save(characterToSave);
     }
 
+    @Transactional
+    public void saveOrUpdate(String characterId, DFCharacterResponseDTO dto) {
+        DFCharacter characterToSave = dfCharacterRepository
+                .findByCharacterIdAndServerId(characterId, dto.getServerId())
+                .map(existingCharacter -> {
+                    existingCharacter.setCharacterName(dto.getCharacterName());
+                    existingCharacter.setAdventureName(dto.getAdventureName());
+                    existingCharacter.setLastUpdated(LocalDateTime.now());
+                    return existingCharacter;
+                })
+                .orElse(DFCharacter.builder()
+                        .characterId(characterId)
+                        .characterName(dto.getCharacterName())
+                        .serverId(dto.getServerId())
+                        .adventureName(dto.getAdventureName())
+                        .lastUpdated(LocalDateTime.now())
+                        .build());
+
+        dfCharacterRepository.save(characterToSave);
+    }
+
     @Transactional(readOnly = true)
     public List<DFCharacterResponseDTO> findByAdventureName(String adventureName) {
         return dfCharacterRepository.findByAdventureName(adventureName)
