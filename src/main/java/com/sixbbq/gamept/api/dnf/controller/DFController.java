@@ -1,10 +1,12 @@
 package com.sixbbq.gamept.api.dnf.controller;
 
 import com.sixbbq.gamept.api.dnf.service.DFService;
+import com.sixbbq.gamept.redis.RedisChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -14,6 +16,7 @@ import java.util.NoSuchElementException;
 public class DFController {
 
     private final DFService dfService;
+    private final RedisChatService redisChatService;
 
     /**
      * 1. 던파 캐릭터 검색 API
@@ -52,6 +55,23 @@ public class DFController {
             throw new NoSuchElementException(e);
         }
 
+    }
+
+    @PostMapping("/ai/addchat")
+    public ResponseEntity<?> addChat(@RequestParam String characterId, @RequestParam String chatMessage) {
+        List<String> chat = redisChatService.getChat(characterId);
+        // 추후 ai한테 메세지 전달하기
+
+        redisChatService.addChatMessage(characterId, chatMessage);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("ai/deletechat")
+    public ResponseEntity<?> deleteChat(@RequestParam String characterId) {
+        redisChatService.clearChat(characterId);
+
+        return ResponseEntity.ok().build();
     }
 
     /**

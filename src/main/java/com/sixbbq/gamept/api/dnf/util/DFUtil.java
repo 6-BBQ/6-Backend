@@ -52,7 +52,7 @@ public class DFUtil {
 
     /**
      * 캐릭터 장착 장비 API URL 생성
-     * getInfoUrl 목록 : equipment, avatar, crature, flag, talisman
+     * getInfoUrl 목록 : equipment, avatar, creature, flag, talisman
      */
     public static String buildCharacterDetailInfoApiUrl(String baseUrl, String serverId, String characterId, String apiKey, String getInfoUrl) {
         return UriComponentsBuilder
