@@ -1,47 +1,47 @@
-spring:
-  application:
-    name: gamept
+  spring:
+    application:
+      name: gamept
 
-  datasource:
-    url: ${DB_URL}
-    driver-class-name: ${DB_DRIVER_NAME}
-    username: ${DB_USER_NAME}
-    password: ${DB_PASSWORD}
+    datasource:
+      url: ${DB_URL}
+      driver-class-name: ${DB_DRIVER_NAME}
+      username: ${DB_USER_NAME}
+      password: ${DB_PASSWORD}
 
-  config:
-    import: optional:file:.env[.properties]
+    config:
+      import: optional:file:.env[.properties]
 
-  jpa:
-    properties:
+    jpa:
+      properties:
+        hibernate:
+          format_sql: true
       hibernate:
-        format_sql: true
-    hibernate:
-      ddl-auto: update
+        ddl-auto: update
 
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    operations-sorter: alpha
-    tags-sorter: alpha
-    disable-swagger-default-url: true
-    doc-expansion: none
-  api-docs:
-    path: /api-docs
-  default-consumes-media-type: application/json
-  default-produces-media-type: application/json
+  springdoc:
+    swagger-ui:
+      path: /swagger-ui.html
+      operations-sorter: alpha
+      tags-sorter: alpha
+      disable-swagger-default-url: true
+      doc-expansion: none
+    api-docs:
+      path: /api-docs
+    default-consumes-media-type: application/json
+    default-produces-media-type: application/json
 
-maplestory:
-  api:
-    key: ${MAPLESTORY_API_KEY}
-    base-url: ${MAPLESTORY_API_BASE_URL}
+  maplestory:
+    api:
+      key: ${MAPLESTORY_API_KEY}
+      base-url: ${MAPLESTORY_API_BASE_URL}
 
-dnf:
-  api:
-    key: ${DNF_API_KEY}
-    base-url: ${DNF_API_BASE_URL}
-    image-base-url: ${DNF_API_CHARACTER_IMAGE_BASE_URL}
+  dnf:
+    api:
+      key: ${DNF_API_KEY}
+      base-url: ${DNF_API_BASE_URL}
+      image-base-url: ${DNF_API_IMAGE_BASE_URL}
 
-loa:
-  api:
-    token: ${LOA_API_KEY}
-    base-url: ${LOA_API_BASE_URL}
+  loa:
+    api:
+      base-url: https://developer-lostark.game.onstove.com
+      token: ${LOA_API_KEY}
