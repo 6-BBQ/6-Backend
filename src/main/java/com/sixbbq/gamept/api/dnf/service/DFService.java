@@ -2,10 +2,13 @@ package com.sixbbq.gamept.api.dnf.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
+import com.sixbbq.gamept.api.dnf.dto.avatar.Avatar;
+import com.sixbbq.gamept.api.dnf.dto.type.CharacterDetailType;
 import com.sixbbq.gamept.api.dnf.util.DFUtil;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -142,11 +145,30 @@ public class DFService {
                     dfCharacterService.saveOrUpdate(characterId, dto);
                 }
 
-                apiUrl = DFUtil.buildCharacterDetailInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, "equipment");
-                responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, null, Map.class);
+                for (CharacterDetailType type : CharacterDetailType.values()) {
+                    apiUrl = DFUtil.buildCharacterDetailInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, type.getValue());
+                    responseEntity = restTemplate.exchange(apiUrl, HttpMethod.GET, null, Map.class);
 
-                characterDetails = responseEntity.getBody();
-                dto = objectMapper.convertValue(characterDetails, DFCharacterResponseDTO.class);
+                    characterDetails = responseEntity.getBody();
+
+                    switch (type) {
+                        case EQUIPMENT:
+                            dto.setEquipment(objectMapper.convertValue(characterDetails.get("equipment"), new TypeReference<>() {}));
+                            break;
+                        case AVATAR:
+                            dto.setAvatar(objectMapper.convertValue(characterDetails.get("avatar"), new TypeReference<>() {}));
+                            break;
+//                        case CREATURE:
+//                            dto.setCreature(objectMapper.convertValue(characterDetails.get("creature"), CreatureDTO.class));
+//                            break;
+//                        case FLAG:
+//                            dto.setFlag(objectMapper.convertValue(characterDetails.get("flag"), FlagDTO.class));
+//                            break;
+//                        case TALISMAN:
+//                            dto.setTalisman(objectMapper.convertValue(characterDetails.get("talisman"), TalismanDTO.class));
+//                            break;
+                    }
+                }
 
                 String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, dto.getServerId(), characterId, 2);
                 dto.setImageUrl(imageUrl);

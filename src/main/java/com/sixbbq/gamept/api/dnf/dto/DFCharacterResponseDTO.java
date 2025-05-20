@@ -1,6 +1,7 @@
 package com.sixbbq.gamept.api.dnf.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.sixbbq.gamept.api.dnf.dto.avatar.Avatar;
 import com.sixbbq.gamept.api.dnf.dto.equip.Equip;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,4 +26,5 @@ public class DFCharacterResponseDTO {
     private String guildName;
     private LocalDateTime lastUpdated;
     private List<Equip> equipment;
+    private List<Avatar> avatar;
 }
