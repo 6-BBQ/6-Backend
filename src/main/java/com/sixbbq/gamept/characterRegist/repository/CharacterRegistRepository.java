@@ -1,0 +1,14 @@
+package com.sixbbq.gamept.characterRegist.repository;
+
+import com.sixbbq.gamept.characterRegist.entity.CharacterRegist;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface CharacterRegistRepository extends JpaRepository<CharacterRegist, Long> {
+    List<CharacterRegist> findByUserId(String userId);
+    boolean existsByUserIdAndCharacterId(String userId, String characterId);
+    boolean existsByCharacterId(String characterId);
+}
