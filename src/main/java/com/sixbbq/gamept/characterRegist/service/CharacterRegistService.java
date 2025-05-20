@@ -1,5 +1,6 @@
 package com.sixbbq.gamept.characterRegist.service;
 
+import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistRequestDto;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistResponseDto;
@@ -53,11 +54,11 @@ public class CharacterRegistService {
             log.info("찾은 캐릭터: id={}, name={}, server={}", characterId, characterName, serverId);
 
             // 4. 캐릭터 상세 정보 조회
-            Map<String, Object> characterDetail = dfService.getCharacterInfo(serverId, characterId);
+            DFCharacterResponseDTO characterDetail = dfService.getCharacterInfo(serverId, characterId);
             log.info("캐릭터 상세 정보: {}", characterDetail);
 
             // 5. 모험단명 일치 여부 확인
-            String adventureName = (String) characterDetail.get("adventureName");
+            String adventureName = characterDetail.getAdventureName();
             log.info("모험단명 비교: 요청={}, 실제={}", requestDTO.getAdventureName(), adventureName);
             if (!requestDTO.getAdventureName().equals(adventureName)) {
                 log.warn("모험단명 불일치: 요청={}, 실제={}", requestDTO.getAdventureName(), adventureName);
