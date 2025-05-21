@@ -12,4 +12,12 @@ public class CharacterRegistResponseDto {
     private String characterName;
     private String serverId;
     private String adventureName;
+
+    public CharacterRegistResponseDto() {
+    }
+
+    public CharacterRegistResponseDto(boolean success, String message) {
+        this.success = success;
+        this.message = message;
+    }
 }

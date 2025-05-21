@@ -145,10 +145,6 @@ public class DFService {
 
                 dto = objectMapper.convertValue(characterDetails, DFCharacterResponseDTO.class);
 
-                if (dto.getCharacterName() != null && dto.getAdventureName() != null && dto.getServerId() != null) {
-                    dfCharacterService.saveOrUpdate(characterId, dto);
-                }
-
                 for (CharacterDetailType type : CharacterDetailType.values()) {
                     if (type == CharacterDetailType.SKILL) {
                         apiUrl = DFUtil.buildCharacterSkillStyleApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey);

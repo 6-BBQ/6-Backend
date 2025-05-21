@@ -34,8 +34,8 @@ public class CharacterRegistService {
     @Transactional
     public CharacterRegistResponseDto registerCharacter(String userId, CharacterRegistRequestDto requestDTO) {
         try {
-            log.info("캐릭터 등록 요청: userId={}, serverId={}, characterName={}, adventureName={}", 
-                userId, requestDTO.getServerId(), requestDTO.getCharacterName(), requestDTO.getAdventureName());
+            log.info("캐릭터 등록 요청: userId={}, serverId={}, characterName={}",
+                userId, requestDTO.getServerId(), requestDTO.getCharacterName());
 
             // 1. 던파 API를 통해 캐릭터 검색 (DFService의 실제 메서드명 사용)
             Map<String, Object> searchResult = dfService.processSearchRequest(requestDTO.getServerId(), requestDTO.getCharacterName());
@@ -60,33 +60,34 @@ public class CharacterRegistService {
             log.info("캐릭터 상세 정보: {}", characterDetail);
 
             // 5. 모험단명 일치 여부 확인
-            String adventureName = characterDetail.getAdventureName();
-            log.info("모험단명 비교: 요청={}, 실제={}", requestDTO.getAdventureName(), adventureName);
-            if (!requestDTO.getAdventureName().equals(adventureName)) {
-                log.warn("모험단명 불일치: 요청={}, 실제={}", requestDTO.getAdventureName(), adventureName);
-                return createErrorResponse("모험단명이 일치하지 않습니다.");
+            List<CharacterRegist> byUserId = characterRegistRepository.findByUserId(userId);
+            CharacterRegist userCharacter = new CharacterRegist();
+            if(byUserId == null || byUserId.isEmpty()) {
+                // 신규등록
+                userCharacter.setUserId(userId);
+                userCharacter.setCharacterId(characterId);
+                userCharacter.setCharacterName(characterName);
+                userCharacter.setServerId(serverId);
+                userCharacter.setAdventureName(characterDetail.getAdventureName());
+                userCharacter.setCreatedAt(LocalDateTime.now());
+            } else if (byUserId.get(0).getAdventureName().equals(characterDetail.getAdventureName())) {
+                userCharacter.setUserId(userId);
+                userCharacter.setCharacterId(characterId);
+                userCharacter.setCharacterName(characterName);
+                userCharacter.setServerId(serverId);
+                userCharacter.setAdventureName(characterDetail.getAdventureName());
+                userCharacter.setCreatedAt(LocalDateTime.now());
+            }  else {
+                return new CharacterRegistResponseDto(false,"모험단명이 일치하지 않습니다.");
             }
 
             // 6. 중복 등록 검사 (전체 시스템 내에서)
             boolean existsByCurrentUser = characterRegistRepository.existsByUserIdAndCharacterId(userId, characterId);
-            boolean existsByAnyUser = characterRegistRepository.existsByCharacterId(characterId);
 
             if (existsByCurrentUser) {
                 log.warn("이미 등록된 캐릭터: userId={}, characterId={}", userId, characterId);
                 return createErrorResponse("이미 등록된 캐릭터입니다.");
-            } else if (existsByAnyUser) {
-                log.warn("다른 사용자가 이미 등록한 캐릭터: characterId={}", characterId);
-                return createErrorResponse("이미 다른 사용자가 등록한 캐릭터입니다.");
             }
-
-            // 7. 캐릭터 정보 저장
-            CharacterRegist userCharacter = new CharacterRegist();
-            userCharacter.setUserId(userId);
-            userCharacter.setCharacterId(characterId);
-            userCharacter.setCharacterName(characterName);
-            userCharacter.setServerId(serverId);
-            userCharacter.setAdventureName(adventureName);
-            userCharacter.setCreatedAt(LocalDateTime.now());
 
             log.info("저장할 캐릭터 정보: {}", userCharacter);
             
@@ -106,7 +107,7 @@ public class CharacterRegistService {
             response.setCharacterId(characterId);
             response.setCharacterName(characterName);
             response.setServerId(serverId);
-            response.setAdventureName(adventureName);
+            response.setAdventureName(characterDetail.getAdventureName());
             
             log.info("캐릭터 등록 완료: {}", response);
             return response;
