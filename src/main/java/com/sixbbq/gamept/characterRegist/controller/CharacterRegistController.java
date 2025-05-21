@@ -53,6 +53,38 @@ public class CharacterRegistController {
     }
 
     /**
+     * 모험단에 속한 캐릭터 제거
+     */
+    @DeleteMapping()
+    public ResponseEntity<?> deleteCharacter(HttpSession session, @RequestParam String characterId) {
+        // 1. 로그인 상태 확인
+        String userId = (String) session.getAttribute("LOGGED_IN_MEMBER_ID");
+        log.info("캐릭터 삭제 요청: userId={}, requestData={}", userId, characterId);
+
+        if (userId == null) {
+            log.warn("비로그인 상태에서 캐릭터 삭제 시도");
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        boolean result = characterService.deleteCharacter(userId, characterId);
+
+        if(result) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "삭제 성공");
+            return ResponseEntity.ok().body(response);
+        } else {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "삭제 실패");
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
      * 모험단에 속한 캐릭터 조회
      */
     @GetMapping("/adventure")

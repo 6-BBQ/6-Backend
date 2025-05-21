@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -166,6 +167,16 @@ public class CharacterRegistService {
         } catch (Exception e) {
             log.error("모험단 캐릭터 조회 오류: {}", e.getMessage(), e);
             throw e;
+        }
+    }
+
+    public boolean deleteCharacter(String userId, String characterId) {
+        Optional<CharacterRegist> byUserIdAndCharacterId = characterRegistRepository.findByUserIdAndCharacterId(userId, characterId);
+        if (byUserIdAndCharacterId.isPresent()) {
+            characterRegistRepository.delete(byUserIdAndCharacterId.get());
+            return true;
+        } else {
+            return false;
         }
     }
 }
