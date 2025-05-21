@@ -2,6 +2,7 @@ package com.sixbbq.gamept.characterRegist.controller;
 
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistRequestDto;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistResponseDto;
+import com.sixbbq.gamept.characterRegist.entity.CharacterRegist;
 import com.sixbbq.gamept.characterRegist.service.CharacterRegistService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,12 +86,12 @@ public class CharacterRegistController {
     }
 
     /**
-     * 모험단에 속한 캐릭터 조회
+     * 계정에 속한 캐릭터 조회
      */
     @GetMapping("/adventure")
-    public ResponseEntity<?> getAdventureCharacters(HttpSession session, @RequestParam String name) {
+    public ResponseEntity<?> getAdventureCharacters(HttpSession session) {
         String userId = (String) session.getAttribute("LOGGED_IN_MEMBER_ID");
-        log.info("모험단 캐릭터 조회 요청: userId={}, adventureName={}", userId, name);
+        log.info("모험단 캐릭터 조회 요청: userId={}, adventureName={}", userId);
 
         if (userId == null) {
             log.warn("비로그인 상태에서 모험단 캐릭터 조회 시도");
@@ -101,12 +102,15 @@ public class CharacterRegistController {
         }
 
         try {
-            List<Map<String, Object>> characters = characterService.getCharactersByAdventureName(userId, name);
+            List<CharacterRegist> charactersByUserId = characterService.getCharactersByAdventureName(userId);
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("data", characters);
-            return ResponseEntity.ok(response);
+            if(charactersByUserId.isEmpty()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "등록된 캐릭터가 없습니다.");
+                return ResponseEntity.ok().body(response);
+            } else
+                return ResponseEntity.ok().body(charactersByUserId);
         } catch (Exception e) {
             log.error("모험단 캐릭터 조회 오류: {}", e.getMessage(), e);
 
