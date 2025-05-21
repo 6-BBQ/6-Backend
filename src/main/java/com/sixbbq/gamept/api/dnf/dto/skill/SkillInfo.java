@@ -11,6 +11,6 @@ import lombok.ToString;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SkillInfo {
     private String name;
-    private int requiredLevel;
+    private Integer level;
     private String costType;
 }

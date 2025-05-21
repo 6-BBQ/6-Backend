@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -186,6 +187,17 @@ public class DFService {
                             break;
                         case SKILL:
                             dto.setSkill(objectMapper.convertValue(characterDetails.get("skill"), Skill.class));
+                            // 레벨1인 스킬은 제외하는 부분. 던담 스타일로 갈거면 필요없는 데이터를 걸러야 하므로 사용
+//                            dto.getSkill().getStyle().setActive(
+//                                    dto.getSkill().getStyle().getActive().stream()
+//                                    .filter(skill -> skill.getLevel() != null && skill.getLevel() != 1)
+//                                    .collect(Collectors.toList())
+//                            );
+//                            dto.getSkill().getStyle().setPassive(
+//                                    dto.getSkill().getStyle().getPassive().stream()
+//                                            .filter(skill -> skill.getLevel() != null && skill.getLevel() != 1)
+//                                            .collect(Collectors.toList())
+//                            );
                             break;
                         case BUFF_EQUIPMENT:
                             if (dto.getSkill() == null) dto.setSkill(new Skill());
