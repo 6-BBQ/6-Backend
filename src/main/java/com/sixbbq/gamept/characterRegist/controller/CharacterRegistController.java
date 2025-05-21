@@ -7,12 +7,10 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +49,39 @@ public class CharacterRegistController {
             return ResponseEntity.ok(result);
         } else {
             return ResponseEntity.badRequest().body(result);
+        }
+    }
+
+    /**
+     * 모험단에 속한 캐릭터 조회
+     */
+    @GetMapping("/adventure")
+    public ResponseEntity<?> getAdventureCharacters(HttpSession session, @RequestParam String name) {
+        String userId = (String) session.getAttribute("LOGGED_IN_MEMBER_ID");
+        log.info("모험단 캐릭터 조회 요청: userId={}, adventureName={}", userId, name);
+
+        if (userId == null) {
+            log.warn("비로그인 상태에서 모험단 캐릭터 조회 시도");
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "로그인이 필요합니다.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        try {
+            List<Map<String, Object>> characters = characterService.getCharactersByAdventureName(userId, name);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("data", characters);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("모험단 캐릭터 조회 오류: {}", e.getMessage(), e);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "모험단 캐릭터 조회 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 }

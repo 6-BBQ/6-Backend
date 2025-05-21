@@ -11,4 +11,5 @@ public interface CharacterRegistRepository extends JpaRepository<CharacterRegist
     List<CharacterRegist> findByUserId(String userId);
     boolean existsByUserIdAndCharacterId(String userId, String characterId);
     boolean existsByCharacterId(String characterId);
+    List<CharacterRegist> findByUserIdAndAdventureName(String userId, String adventureName);
 }

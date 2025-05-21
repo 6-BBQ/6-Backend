@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,5 +126,45 @@ public class CharacterRegistService {
         response.setSuccess(false);
         response.setMessage(message);
         return response;
+    }
+
+    /**
+     * 모험단명으로 사용자의 캐릭터 조회
+     */
+    @Transactional
+    public List<Map<String, Object>> getCharactersByAdventureName(String userId, String adventureName) {
+        log.info("모험단별 캐릭터 조회: userId={}, adventureName={}", userId, adventureName);
+
+        try {
+            // 1. 모험단에 속한 모든 캐릭터 조회
+            Map<String, Object> adventureInfo = dfService.processSearchRequest("adven", adventureName);
+
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> allCharacters = (List<Map<String, Object>>) adventureInfo.get("rows");
+            if (allCharacters == null || allCharacters.isEmpty()) {
+                log.warn("모험단을 찾을 수 없습니다: {}", adventureName);
+                return List.of();
+            }
+
+            // 2. 사용자가 등록한 캐릭터 목록 조회
+            List<CharacterRegist> registeredCharacters = characterRegistRepository.findByUserId(userId);
+            List<String> registeredCharacterIds = registeredCharacters.stream()
+                    .map(CharacterRegist::getCharacterId)
+                    .collect(Collectors.toList());
+
+            // 3. 사용자가 등록한 캐릭터만 필터링
+            List<Map<String, Object>> userAdventureCharacters = allCharacters.stream()
+                    .filter(character -> {
+                        String characterId = (String) character.get("characterId");
+                        return registeredCharacterIds.contains(characterId);
+                    })
+                    .collect(Collectors.toList());
+
+            return userAdventureCharacters;
+
+        } catch (Exception e) {
+            log.error("모험단 캐릭터 조회 오류: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 }
