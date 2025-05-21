@@ -39,7 +39,9 @@
     api:
       key: ${DNF_API_KEY}
       base-url: ${DNF_API_BASE_URL}
-      image-base-url: ${DNF_API_IMAGE_BASE_URL}
+      character-image-base-url: ${DNF_API_CHARACTER_IMAGE_BASE_URL}
+      item-image-base-url: ${DNF_API_ITEM_IMAGE_BASE_URL}
+
 
   loa:
     api:
