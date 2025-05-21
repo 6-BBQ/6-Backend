@@ -40,6 +40,13 @@ public class DFUtil {
     }
 
     /**
+     * 캐릭터 장비 이미지 URL 생성 메서드
+     */
+    public static String buildEquipmentImageUrl(String baseUrl, String itemId) {
+        return String.format("%s/%s", baseUrl, itemId);
+    }
+
+    /**
      * 캐릭터 능력치 API URL 생성
      */
     public static String buildCharacterStatusApiUrl(String baseUrl, String serverId, String characterId, String apiKey) {
