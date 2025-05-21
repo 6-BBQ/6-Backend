@@ -5,6 +5,7 @@ import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffAvatar.BuffAvatar;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffCreature.BuffCreature;
 import com.sixbbq.gamept.api.dnf.dto.creature.Creature;
+import com.sixbbq.gamept.api.dnf.dto.equip.Equip;
 import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffEquip.BuffSkill;
 import com.sixbbq.gamept.api.dnf.dto.skill.Skill;
@@ -34,8 +35,10 @@ public class DFService {
     private String apiKey;
     @Value("${dnf.api.base-url}")
     private String NEOPLE_API_BASE_URL;
-    @Value("${dnf.api.image-base-url}")
+    @Value("${dnf.api.character-image-base-url}")
     private String CHARACTER_IMAGE_BASE_URL;
+    @Value("${dnf.api.item-image-base-url}")
+    private String ITEM_IMAGE_BASE_URL;
 
     private final String WORD_TYPE_MATCH = "match";
 
@@ -165,6 +168,9 @@ public class DFService {
                         case EQUIPMENT:
                             dto.setEquipment(objectMapper.convertValue(characterDetails.get("equipment"), new TypeReference<>() {}));
                             dto.setSetItemInfo(objectMapper.convertValue(characterDetails.get("setItemInfo"), new TypeReference<>() {}));
+                            for(Equip equip : dto.getEquipment()) {
+                                equip.setItemImage(DFUtil.buildEquipmentImageUrl(ITEM_IMAGE_BASE_URL, equip.getItemId()));
+                            }
                             break;
                         case AVATAR:
                             dto.setAvatar(objectMapper.convertValue(characterDetails.get("avatar"), new TypeReference<>() {}));
