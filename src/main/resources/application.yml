@@ -17,6 +17,10 @@
           format_sql: true
       hibernate:
         ddl-auto: update
+    data:
+      redis:
+        port: ${REDIS_PORT}
+        host: ${REDIS_HOST}
 
   springdoc:
     swagger-ui:
