@@ -67,7 +67,7 @@ public class DFController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("ai/deletechat")
+    @DeleteMapping("/ai/deletechat")
     public ResponseEntity<?> deleteChat(@RequestParam String characterId) {
         redisChatService.clearChat(characterId);
 

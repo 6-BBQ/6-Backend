@@ -13,7 +13,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FusionOption {
     private List<Options> options;
-    private Engrave engrave;
 
     @Getter
     @Setter
@@ -22,6 +21,7 @@ public class FusionOption {
     public static class Options {
         private Integer buff;
         private String explain;
+        private Engrave engrave;
     }
 
     @Getter
@@ -29,6 +29,6 @@ public class FusionOption {
     @ToString
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Engrave {
-        private String explain;
+        private String value;
     }
 }

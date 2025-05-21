@@ -19,7 +19,6 @@ public class Equip {
     private String reinforce;
     private String itemGradeName;
     private Enchant enchant;
-    private List<Status> status;
     private String amplificationName;
     private FusionOption fusionOption;
     private List<Tune> tune;

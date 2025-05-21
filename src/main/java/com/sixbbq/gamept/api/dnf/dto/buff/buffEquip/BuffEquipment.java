@@ -1,4 +1,4 @@
-package com.sixbbq.gamept.api.dnf.dto.buffEquip;
+package com.sixbbq.gamept.api.dnf.dto.buff.buffEquip;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;

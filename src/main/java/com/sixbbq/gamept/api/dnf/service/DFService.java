@@ -2,11 +2,11 @@ package com.sixbbq.gamept.api.dnf.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
-import com.sixbbq.gamept.api.dnf.dto.buffAvatar.BuffAvatar;
-import com.sixbbq.gamept.api.dnf.dto.buffCreature.BuffCreature;
+import com.sixbbq.gamept.api.dnf.dto.buff.buffAvatar.BuffAvatar;
+import com.sixbbq.gamept.api.dnf.dto.buff.buffCreature.BuffCreature;
 import com.sixbbq.gamept.api.dnf.dto.creature.Creature;
 import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
-import com.sixbbq.gamept.api.dnf.dto.buffEquip.BuffSkill;
+import com.sixbbq.gamept.api.dnf.dto.buff.buffEquip.BuffSkill;
 import com.sixbbq.gamept.api.dnf.dto.skill.Skill;
 import com.sixbbq.gamept.api.dnf.dto.type.CharacterDetailType;
 import com.sixbbq.gamept.api.dnf.util.DFUtil;

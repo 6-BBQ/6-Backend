@@ -1,4 +1,4 @@
-package com.sixbbq.gamept.api.dnf.dto.buffAvatar;
+package com.sixbbq.gamept.api.dnf.dto.buff.buffAvatar;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
@@ -9,9 +9,6 @@ import lombok.ToString;
 @Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AvatarEmblem {
-    private int slotNo;
-    private String slotColor;
+public class AvatarClone {
     private String itemName;
-    private String itemRarity;
 }

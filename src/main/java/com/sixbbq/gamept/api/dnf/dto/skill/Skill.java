@@ -1,7 +1,7 @@
 package com.sixbbq.gamept.api.dnf.dto.skill;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.sixbbq.gamept.api.dnf.dto.buffEquip.BuffSkill;
+import com.sixbbq.gamept.api.dnf.dto.buff.buffEquip.BuffSkill;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
