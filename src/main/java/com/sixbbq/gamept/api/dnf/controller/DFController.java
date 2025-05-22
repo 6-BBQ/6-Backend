@@ -92,7 +92,7 @@ public class DFController {
      * @param questionMessage 질문 내용
      * @return 질문에 대한 AI의 응답
      */
-    @PostMapping("/ai/chat")
+    @PostMapping("/chat")
     public ResponseEntity<?> addChat(@RequestParam String characterId, @RequestParam String questionMessage) {
         try {
             List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, characterId);
@@ -126,7 +126,7 @@ public class DFController {
      * @param characterId 채팅내역을 초기화할 캐릭터
      * @return 채팅 초기화 여부
      */
-    @DeleteMapping("/ai/deletechat")
+    @DeleteMapping("/chat")
     public ResponseEntity<?> deleteChat(@RequestParam String characterId) {
         try {
             redisChatService.clearChat(CHAT_KEY_PREFIX, characterId);
