@@ -9,7 +9,6 @@ import com.sixbbq.gamept.auth.service.AuthService;
 import com.sixbbq.gamept.auth.service.MemberService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -65,7 +64,7 @@ public class MemberController {
             Member member = memberService.findById(loginDto.getUserId());
 
             response.put("message", "로그인 성공");
-            response.put("accessToken", tokenDto.getAccessToken());
+            response.put("token", tokenDto);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {

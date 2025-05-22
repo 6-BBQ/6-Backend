@@ -19,17 +19,22 @@ public class JwtTokenProvider {
 
     private static final String AUTHORITIES_KEY = "auth";
     private static final String BEARER_TYPE = "Bearer";
-    private static final long ACCESS_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L;          // 30분
-    private static final long REFRESH_TOKEN_EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000L; // 7일
 
     private final SecretKey key;
     private final UserDetailsService userDetailsService;
+    private final long accessTokenExpireTime;
+    private final long refreshTokenExpireTime;
 
     // 시크릿 키 초기화
-    public JwtTokenProvider(@Value("${jwt.secret}") String secretKey, UserDetailsService userDetailsService) {
+    public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,
+                            @Value("${jwt.accessTokenExpirationMs}") long accessTokenExpireTime,
+                            @Value("${jwt.refreshTokenExpirationMs}") long refreshTokenExpireTime,
+                            UserDetailsService userDetailsService) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
         this.userDetailsService = userDetailsService;
+        this.accessTokenExpireTime = accessTokenExpireTime;
+        this.refreshTokenExpireTime = refreshTokenExpireTime;
     }
 
     // 토큰 생성
@@ -37,17 +42,17 @@ public class JwtTokenProvider {
         long now = (new Date()).getTime();
 
         // Access Token 생성
-        Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
+        Date accessTokenExpiresIn = new Date(now + accessTokenExpireTime);
         String accessToken = Jwts.builder()
-                .setSubject(userId)
+                .setSubject(userId) // payload sub: 사용자Id, auth: 권한정보, exp: 만료시간
                 .claim(AUTHORITIES_KEY, "USER")
                 .setExpiration(accessTokenExpiresIn)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(key, SignatureAlgorithm.HS256) // 헤더 설정 알고리즘 HS256
                 .compact();
 
         // Refresh Token 생성
         String refreshToken = Jwts.builder()
-                .setExpiration(new Date(now + REFRESH_TOKEN_EXPIRE_TIME))
+                .setExpiration(new Date(now + refreshTokenExpireTime))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
@@ -92,4 +97,19 @@ public class JwtTokenProvider {
             return e.getClaims();
         }
     }
+
+    // 만료된 토큰에서 userId 추출
+    public String getUserIdFromExpiredToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.getSubject();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims().getSubject();
+        }
+    }
+
 }

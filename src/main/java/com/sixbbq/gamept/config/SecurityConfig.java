@@ -1,5 +1,6 @@
 package com.sixbbq.gamept.config;
 
+import com.sixbbq.gamept.auth.repository.RefreshTokenRepository;
 import com.sixbbq.gamept.jwt.JwtAuthenticationFilter;
 import com.sixbbq.gamept.jwt.JwtExceptionFilter;
 import com.sixbbq.gamept.jwt.JwtTokenProvider;
@@ -23,6 +24,7 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,8 +42,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 // JWT 필터 추가
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new JwtExceptionFilter(), JwtAuthenticationFilter.class);
+                    .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, refreshTokenRepository), UsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(new JwtExceptionFilter(), JwtAuthenticationFilter.class);
 
         return http.build();
     }
@@ -58,4 +60,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }
