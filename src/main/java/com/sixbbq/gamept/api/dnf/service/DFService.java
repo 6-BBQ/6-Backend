@@ -1,6 +1,7 @@
 package com.sixbbq.gamept.api.dnf.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sixbbq.gamept.api.dnf.dto.DFCharacterInfoResponseAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.avatar.Avatar;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffAvatar.BuffAvatar;
@@ -263,7 +264,7 @@ public class DFService {
                 String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, dto.getServerId(), characterId, 2);
                 dto.setImageUrl(imageUrl);
 
-                // Redis에 캐릭터 상세 정보 저장
+                // Redis에 캐릭터 상세 정보와 요약정보 저장
                 try {
                     String characterInfoKey = "character:" + characterId;
                     redisChatService.setCharacterInfo(characterInfoKey, dto);

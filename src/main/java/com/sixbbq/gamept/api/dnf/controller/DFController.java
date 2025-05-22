@@ -1,14 +1,19 @@
 package com.sixbbq.gamept.api.dnf.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterInfoResponseAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
+import com.sixbbq.gamept.api.dnf.dto.ResponseAIDTO;
+import com.sixbbq.gamept.api.dnf.dto.request.ChatRequest;
 import com.sixbbq.gamept.api.dnf.service.DFService;
 import com.sixbbq.gamept.redis.service.RedisChatService;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.LifecycleState;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +24,9 @@ import java.util.NoSuchElementException;
 @RequestMapping("/api/df")
 @RequiredArgsConstructor
 public class DFController {
+    private final RestTemplate restTemplate;
+    @Value("${ai.url}")
+    private String aiURL;
 
     private final DFService dfService;
     private final RedisChatService redisChatService;
@@ -88,38 +96,64 @@ public class DFController {
 
     /**
      * 4. 캐릭터의 AI채팅 API
-     * @param characterId 채팅창의 주체가 되는 캐릭터
-     * @param questionMessage 질문 내용
+     * @param chatRequest 채팅창과 관련된 정보[캐릭터Id, 질문, 질문에 대한 응답]
      * @return 질문에 대한 AI의 응답
      */
     @PostMapping("/chat")
     public ResponseEntity<?> addChat(@RequestParam String characterId, @RequestParam String questionMessage) {
         try {
             List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, characterId);
-            DFCharacterResponseDTO getCharacterInfo = redisChatService.getCharacterInfo(CHARACTER_KEY_PREFIX, characterId);
-            DFCharacterInfoResponseAIDTO dto = new DFCharacterInfoResponseAIDTO(getCharacterInfo);
-
-            // AI한테 데이터를 보내는 코드 작성
-
             if(getChat.size() >= 5) {
                 Map<String,String> response = new HashMap<>();
                 response.put("message", "한도를 초과하였습니다. 채팅방이 초기화 됩니다.");
                 return ResponseEntity.ok().body(response);
             }
 
-            // 임시로 하드코딩된 응답 사용
-            String aiResponse = "안녕하세요! 저는 당신의 던전앤파이터 AI 어시스턴트입니다. 무엇을 도와드릴까요?";
+            DFCharacterResponseDTO getCharacterInfo = redisChatService.getCharacterInfo(CHARACTER_KEY_PREFIX, characterId);
+            DFCharacterInfoResponseAIDTO dto = new DFCharacterInfoResponseAIDTO(getCharacterInfo);
+
+            // AI한테 데이터를 보내는 코드 작성
+            String url = aiURL + "/api/df/chat";
+            ResponseEntity<String> getResponseAI = restTemplate.getForEntity(url, String.class);
+            String json = getResponseAI.getBody();
+
+            ObjectMapper mapper = new ObjectMapper();
+            ResponseAIDTO aiDTO = mapper.readValue(json, ResponseAIDTO.class);
 
             // 사용자 메시지 저장
             redisChatService.addChatMessage(CHAT_KEY_PREFIX, characterId, questionMessage);
             // AI 응답 저장
-            redisChatService.addChatMessage(RESPONSE_KEY_PREFIX, characterId, aiResponse);
+            redisChatService.addChatMessage(RESPONSE_KEY_PREFIX, characterId, aiDTO.getAnswer());
 
-            return ResponseEntity.ok(Map.of("response", aiResponse));
+            return ResponseEntity.ok(Map.of("response", aiDTO));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", "채팅 메시지 처리 실패"));
         }
     }
+//    @PostMapping("/chat")
+//    public ResponseEntity<?> addChat(@RequestBody ChatRequest chatRequest) {
+//        try {
+//            List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, chatRequest.getCharacterId());
+//
+//            // 사용자 메시지 저장
+//            redisChatService.addChatMessage(CHAT_KEY_PREFIX, chatRequest.getCharacterId(), chatRequest.getChatQuestionMessage());
+//            // AI 응답 저장
+//            redisChatService.addChatMessage(RESPONSE_KEY_PREFIX, chatRequest.getCharacterId(), chatRequest.getChatAnswerMessage());
+//
+//            if(getChat.size() >= 5) {
+//                Map<String,String> response = new HashMap<>();
+//                response.put("status", "실패");
+//                response.put("message", "한도를 초과하였습니다. 채팅방이 초기화 됩니다.");
+//                redisChatService.clearChat(CHAT_KEY_PREFIX, chatRequest.getCharacterId());
+//                redisChatService.clearChat(RESPONSE_KEY_PREFIX, chatRequest.getCharacterId());
+//                return ResponseEntity.ok().body(response);
+//            }
+//
+//            return ResponseEntity.ok(Map.of("status", "성공","message", "저장 성공"));
+//        } catch (Exception e) {
+//            return ResponseEntity.badRequest().body(Map.of("error", "채팅 메시지 처리 실패"));
+//        }
+//    }
 
     /**
      * 5. 캐릭터 AI채팅 내역 초기화

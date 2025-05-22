@@ -3,6 +3,7 @@ package com.sixbbq.gamept.redis.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.sixbbq.gamept.api.dnf.dto.DFCharacterInfoResponseAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.redis.dto.ChatMessageDto;
 import jakarta.annotation.PostConstruct;
@@ -133,8 +134,11 @@ public class RedisChatService {
      */
     public void setCharacterInfo(String key, DFCharacterResponseDTO value) {
         try {
+            DFCharacterInfoResponseAIDTO dfCharacterInfoResponseAIDTO = new DFCharacterInfoResponseAIDTO(value);
+            String jsonCharacterInfo = objectMapper.writeValueAsString(dfCharacterInfoResponseAIDTO);
             String json = objectMapper.writeValueAsString(value);
             redisTemplate.opsForValue().set(key, json, EXPIRED_DAY, TimeUnit.DAYS);
+            redisTemplate.opsForValue().set(value.getCharacterId(), jsonCharacterInfo, EXPIRED_DAY, TimeUnit.DAYS);
             log.debug("캐릭터 정보 Redis 저장 완료: [{}]", key);
         } catch (Exception e) {
             log.error("캐릭터 정보 Redis 저장 실패: {}", e.getMessage());

@@ -38,6 +38,8 @@
             auth: true
             starttls:
               enable: true
+            ssl:
+              trust: "*"
   springdoc:
     swagger-ui:
       path: /swagger-ui.html
@@ -72,4 +74,7 @@
     secret: ${JWT_SECRET}
     accessTokenExpirationMs: ${JWT_ACCESS_TOKEN_EXPIRATION_MS}
     refreshTokenExpirationMs: ${JWT_REFRESH_TOKEN_EXPIRATION_MS}
+
+  ai:
+    url: ${AI_URL}
 
