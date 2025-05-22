@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         // 인증없이 접근 가능한 경로 설정
-                        .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/reissue", "/api/df/character"
+                        .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/reissue", "/api/df/character", "/api/df/search"
                         ,// Swagger UI 접근 허용
                                 "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/api-docs/**").permitAll()
                         // 나머지 요청은 인증 필요
