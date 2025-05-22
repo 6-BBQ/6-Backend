@@ -1,7 +1,7 @@
 package com.sixbbq.gamept.api.dnf.controller;
 
 import com.sixbbq.gamept.api.dnf.service.DFService;
-import com.sixbbq.gamept.redis.RedisChatService;
+import com.sixbbq.gamept.redis.service.RedisChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

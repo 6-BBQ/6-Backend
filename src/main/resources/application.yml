@@ -2,6 +2,11 @@
     application:
       name: gamept
 
+    jackson:
+      serialization:
+        write-dates-as-timestamps: false   # 직렬화 시 timestamp 숫자 대신 ISO 문자열 사용
+
+
     datasource:
       url: ${DB_URL}
       driver-class-name: ${DB_DRIVER_NAME}
