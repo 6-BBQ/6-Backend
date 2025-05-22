@@ -42,8 +42,7 @@ public class DFService {
     private String apiKey;
     @Value("${dnf.api.base-url}")
     private String NEOPLE_API_BASE_URL;
-    @Value("${" +
-            "dnf.api.character-image-base-url}")
+    @Value("${dnf.api.character-image-base-url}")
     private String CHARACTER_IMAGE_BASE_URL;
     @Value("${dnf.api.item-image-base-url}")
     private String ITEM_IMAGE_BASE_URL;

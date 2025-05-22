@@ -16,6 +16,7 @@ public class Avatar {
     private String itemImage;
     private String slotName;
     private String itemRarity;
+    private String itemName;
     private Clone clone;
     private String optionAbility;
     private List<Emblems> emblems;
