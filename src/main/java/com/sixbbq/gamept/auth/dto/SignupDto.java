@@ -1,8 +1,14 @@
 package com.sixbbq.gamept.auth.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class SignupDto {
 
     private String userId;
+    private String email;
     private String password;
     private String passwordConfirm;
     private String nickname;
@@ -12,42 +18,11 @@ public class SignupDto {
     }
 
     // 모든 필드 생성자
-    public SignupDto(String userId, String password, String passwordConfirm, String nickname) {
+    public SignupDto(String userId, String email, String password, String passwordConfirm, String nickname) {
         this.userId = userId;
+        this.email = email;
         this.password = password;
         this.passwordConfirm = passwordConfirm;
-        this.nickname = nickname;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getPasswordConfirm() {
-        return passwordConfirm;
-    }
-
-    public void setPasswordConfirm(String passwordConfirm) {
-        this.passwordConfirm = passwordConfirm;
-    }
-
-    public String getNickname() {
-        return nickname;
-    }
-
-    public void setNickname(String nickname) {
         this.nickname = nickname;
     }
 
@@ -55,6 +30,7 @@ public class SignupDto {
     public String toString() {
         return "SignupDto{" +
                 "userId='" + userId + '\'' +
+                ", email='" + email + '\'' +
                 ", password='[PROTECTED]'" +
                 ", passwordConfirm='[PROTECTED]'" +
                 ", nickname='" + nickname + '\'' +

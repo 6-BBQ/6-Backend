@@ -1,11 +1,9 @@
 package com.sixbbq.gamept.auth.controller;
 
-import com.sixbbq.gamept.auth.dto.LoginDto;
-import com.sixbbq.gamept.auth.dto.SignupDto;
-import com.sixbbq.gamept.auth.dto.TokenDto;
-import com.sixbbq.gamept.auth.dto.TokenRequestDto;
+import com.sixbbq.gamept.auth.dto.*;
 import com.sixbbq.gamept.auth.entity.Member;
 import com.sixbbq.gamept.auth.service.AuthService;
+import com.sixbbq.gamept.auth.service.EmailService;
 import com.sixbbq.gamept.auth.service.MemberService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +23,52 @@ public class MemberController {
 
     private final MemberService memberService;
     private final AuthService authService;
+    private final EmailService emailService;
+
+    // 이메일 인증 코드 발송 API
+    @PostMapping("/send-verification")
+    public ResponseEntity<?> sendVerificationEmail(@RequestBody EmailRequestDto emailRequestDto) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            emailService.sendVerificationEmail(emailRequestDto.getEmail());
+
+            response.put("success", true);
+            response.put("message", "인증 코드가 이메일로 발송되었습니다.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "이메일 발송 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // 이메일 인증 확인 API
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(@RequestBody EmailVerificationDto emailVerificationDto) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            boolean isVerified = emailService.verifyCode(
+                    emailVerificationDto.getEmail(),
+                    emailVerificationDto.getVerificationCode()
+            );
+
+            if (isVerified) {
+                response.put("success", true);
+                response.put("message", "이메일 인증이 완료되었습니다.");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("success", false);
+                response.put("message", "인증 코드가 올바르지 않거나 만료되었습니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "이메일 인증 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 
     // 회원가입 API
     @PostMapping("/signup")
@@ -33,17 +77,16 @@ public class MemberController {
 
         try {
             Member member = memberService.signup(signupDto);
-            if (member != null) {
-                response.put("success", true);
-                response.put("message", "회원가입이 완료되었습니다.");
-                response.put("userId", member.getUserId());
-                response.put("nickname", member.getNickname());
-                return ResponseEntity.status(HttpStatus.CREATED).body(response);
-            } else {
-                response.put("success", false);
-                response.put("message", "이미 사용 중인 아이디입니다.");
-                return ResponseEntity.badRequest().body(response);
-            }
+            response.put("success", true);
+            response.put("message", "회원가입이 완료되었습니다.");
+            response.put("userId", member.getUserId());
+            response.put("email", member.getEmail());
+            response.put("nickname", member.getNickname());
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "회원가입 중 오류가 발생했습니다: " + e.getMessage());

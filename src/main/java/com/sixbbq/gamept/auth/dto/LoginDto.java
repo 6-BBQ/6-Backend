@@ -1,5 +1,10 @@
 package com.sixbbq.gamept.auth.dto;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class LoginDto {
 
     private String userId;
@@ -12,22 +17,6 @@ public class LoginDto {
     // 모든 필드 생성자
     public LoginDto(String userId, String password) {
         this.userId = userId;
-        this.password = password;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
         this.password = password;
     }
 

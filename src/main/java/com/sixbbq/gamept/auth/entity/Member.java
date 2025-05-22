@@ -17,6 +17,9 @@ public class Member {
     @Column(nullable = false)
     private String userId;
 
+    @Column(nullable = false, unique = true)
+    private String email;
+
     @Column(nullable = false)
     private String password;
 
@@ -32,7 +35,6 @@ public class Member {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate

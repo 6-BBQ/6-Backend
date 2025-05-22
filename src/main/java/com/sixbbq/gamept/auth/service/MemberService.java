@@ -14,19 +14,32 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Autowired
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder) {
+    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, EmailService emailService ) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     // 회원가입
     @Transactional
     public Member signup(SignupDto signupDto) {
+
+        // 이메일 인증 확인
+        if (!emailService.isEmailVerified(signupDto.getEmail())) {
+            throw new IllegalArgumentException("이메일 인증이 완료되지 않았습니다.");
+        }
+
         // 아이디 중복 체크
         if (memberRepository.existsById(signupDto.getUserId())) {
-            return null;
+            throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
+        }
+
+        // 이메일 중복 체크
+        if (memberRepository.existsByEmail(signupDto.getEmail())) {
+            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
 
         // 비밀번호 일치 여부 확인
@@ -38,8 +51,7 @@ public class MemberService {
         // 회원 엔티티 생성 및 저장
         Member member = new Member();
         member.setUserId(signupDto.getUserId());
-
-        // 비밀번호를 BCrypt로 해시화하여 저장
+        member.setEmail(signupDto.getEmail());
         member.setPassword(passwordEncoder.encode(signupDto.getPassword()));
         member.setNickname(signupDto.getNickname());
 

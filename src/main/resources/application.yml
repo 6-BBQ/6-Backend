@@ -22,6 +22,17 @@
         port: ${REDIS_PORT}
         host: ${REDIS_HOST}
 
+    mail:
+      host: smtp.gmail.com
+      port: 587
+      username: ${EMAIL_USERNAME}
+      password: ${EMAIL_PASSWORD}
+      properties:
+        mail:
+          smtp:
+            auth: true
+            starttls:
+              enable: true
   springdoc:
     swagger-ui:
       path: /swagger-ui.html
@@ -56,3 +67,4 @@
     secret: ${JWT_SECRET}
     accessTokenExpirationMs: ${JWT_ACCESS_TOKEN_EXPIRATION_MS}
     refreshTokenExpirationMs: ${JWT_REFRESH_TOKEN_EXPIRATION_MS}
+
