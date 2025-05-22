@@ -59,12 +59,21 @@ public class DFController {
 
     @PostMapping("/ai/addchat")
     public ResponseEntity<?> addChat(@RequestParam String characterId, @RequestParam String chatMessage) {
-        List<String> chat = redisChatService.getChat(characterId);
-        // 추후 ai한테 메세지 전달하기
+        try {
+            // 사용자 메시지 저장
+            redisChatService.addChatMessage(characterId, chatMessage);
 
-        redisChatService.addChatMessage(characterId, chatMessage);
 
-        return ResponseEntity.ok().build();
+            // 임시로 하드코딩된 응답 사용
+            String aiResponse = "안녕하세요! 저는 당신의 던전앤파이터 AI 어시스턴트입니다. 무엇을 도와드릴까요?";
+
+            // AI 응답 저장
+            redisChatService.addChatMessage(characterId, aiResponse);
+
+            return ResponseEntity.ok(Map.of("response", aiResponse));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "채팅 메시지 처리 실패"));
+        }
     }
 
     @DeleteMapping("/ai/deletechat")
