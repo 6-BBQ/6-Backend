@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -126,4 +127,20 @@ public class RedisChatService {
 
         log.info("Added dummy chat messages for characterId [{}]", characterId);
     }
+
+    /**
+     * Redis에 캐릭터 정보를 저장하는 메서드
+     * @param key 저장할 키 (예: "character:characterId")
+     * @param value 저장할 캐릭터 정보 (Map 형식)
+     */
+    public void setCharacterInfo(String key, Map<String, Object> value) {
+        try {
+            String json = objectMapper.writeValueAsString(value);
+            redisTemplate.opsForValue().set(key, json, EXPIRED_DAY, TimeUnit.DAYS);
+            log.debug("캐릭터 정보 Redis 저장 완료: [{}]", key);
+        } catch (Exception e) {
+            log.error("캐릭터 정보 Redis 저장 실패: {}", e.getMessage());
+        }
+    }
+
 }

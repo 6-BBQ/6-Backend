@@ -18,6 +18,7 @@ import com.sixbbq.gamept.api.dnf.dto.talisman.Talisman;
 import com.sixbbq.gamept.api.dnf.dto.talisman.Talismans;
 import com.sixbbq.gamept.api.dnf.dto.type.CharacterDetailType;
 import com.sixbbq.gamept.api.dnf.util.DFUtil;
+import com.sixbbq.gamept.redis.service.RedisChatService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ public class DFService {
     private static final Logger log = LoggerFactory.getLogger(DFService.class);
     private final RestTemplate restTemplate;
     private final DFCharacterService dfCharacterService;
+    private final RedisChatService redisChatService;
 
     @Value("${dnf.api.key}")
     private String apiKey;
@@ -151,6 +153,10 @@ public class DFService {
 
                 dto = objectMapper.convertValue(characterDetails, DFCharacterResponseDTO.class);
 
+                if (dto.getCharacterName() != null && dto.getAdventureName() != null && dto.getServerId() != null) {
+                    dfCharacterService.saveOrUpdate(characterId, dto);
+                }
+
                 for (CharacterDetailType type : CharacterDetailType.values()) {
                     if (type == CharacterDetailType.SKILL) {
                         apiUrl = DFUtil.buildCharacterSkillStyleApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey);
@@ -257,10 +263,19 @@ public class DFService {
 
                     }
                 }
-                
+
                 String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, dto.getServerId(), characterId, 2);
                 dto.setImageUrl(imageUrl);
                 characterDetails.put("imageUrl", imageUrl);
+
+                // Redis에 캐릭터 상세 정보 저장
+                try {
+                    String characterInfoKey = "character:" + characterId;
+                    redisChatService.setCharacterInfo(characterInfoKey, characterDetails);
+                    log.info("캐릭터 상세 정보 Redis 저장 성공: {}", characterId);
+                } catch (Exception e) {
+                    log.error("캐릭터 상세 정보 Redis 저장 실패: {}", e.getMessage());
+                }
             }
 
             return dto;
