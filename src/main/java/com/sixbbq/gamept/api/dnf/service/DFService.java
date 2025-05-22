@@ -217,15 +217,16 @@ public class DFService {
 //                                            .filter(skill -> skill.getLevel() != null && skill.getLevel() != 1)
 //                                            .collect(Collectors.toList())
 //                            );
-                            for(BuffEquipment buff : dto.getSkill().getBuff().getEquipment()) {
-                                buff.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, buff.getItemId()));
-                            }
-                            for(BuffAvatar avatar : dto.getSkill().getBuff().getAvatar()) {
-                                avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
-                            }
-                            for(BuffCreature creature : dto.getSkill().getBuff().getCreature()) {
-                                creature.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, creature.getItemId()));
-
+                            if(dto.getSkill().getBuff() != null) {
+                                for(BuffEquipment buff : dto.getSkill().getBuff().getEquipment()) {
+                                    buff.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, buff.getItemId()));
+                                }
+                                for(BuffAvatar avatar : dto.getSkill().getBuff().getAvatar()) {
+                                    avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
+                                }
+                                for(BuffCreature creature : dto.getSkill().getBuff().getCreature()) {
+                                    creature.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, creature.getItemId()));
+                                }
                             }
                             break;
                         case BUFF_EQUIPMENT:
