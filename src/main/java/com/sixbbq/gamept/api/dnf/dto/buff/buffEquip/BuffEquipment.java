@@ -11,6 +11,8 @@ import lombok.ToString;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BuffEquipment {
     private String slotName;
+    private String itemId;
+    private String itemImage;
     private String itemName;
     private String itemType;
     private String itemTypeDetail;

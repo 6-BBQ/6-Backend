@@ -13,6 +13,8 @@ import java.util.List;
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Flag {
+    private String itemId;
+    private String itemImage;
     private String itemName;
     private String itemRarity;
     private Integer reinforce;

@@ -12,6 +12,8 @@ import java.util.List;
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Avatar {
+    private String itemId;
+    private String itemImage;
     private String slotName;
     private String itemRarity;
     private Clone clone;

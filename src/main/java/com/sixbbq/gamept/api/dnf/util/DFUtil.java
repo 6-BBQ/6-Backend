@@ -40,9 +40,9 @@ public class DFUtil {
     }
 
     /**
-     * 캐릭터 장비 이미지 URL 생성 메서드
+     * 캐릭터 장착 아이템 이미지 URL 생성 메서드
      */
-    public static String buildEquipmentImageUrl(String baseUrl, String itemId) {
+    public static String buildItemImageUrl(String baseUrl, String itemId) {
         return String.format("%s/%s", baseUrl, itemId);
     }
 

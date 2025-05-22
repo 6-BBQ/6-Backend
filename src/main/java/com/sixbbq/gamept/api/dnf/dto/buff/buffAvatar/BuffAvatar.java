@@ -13,6 +13,8 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BuffAvatar {
     private String slotName;
+    private String itemId;
+    private String itemImage;
     private String itemName;
     private String itemRarity;
     private AvatarClone clone;

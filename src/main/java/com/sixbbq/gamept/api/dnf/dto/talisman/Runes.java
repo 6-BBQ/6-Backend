@@ -10,6 +10,8 @@ import lombok.ToString;
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Runes {
+    private String itemId;
+    private String itemImage;
     private Integer slotNo;
     private String itemName;
 }

@@ -10,6 +10,8 @@ import lombok.ToString;
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Artifact {
+    private String itemId;
+    private String itemImage;
     private String itemName;
     private Integer itemAvailableLevel;
     private String itemRarity;

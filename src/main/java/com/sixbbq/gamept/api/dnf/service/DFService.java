@@ -2,13 +2,20 @@ package com.sixbbq.gamept.api.dnf.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
+import com.sixbbq.gamept.api.dnf.dto.avatar.Avatar;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffAvatar.BuffAvatar;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffCreature.BuffCreature;
+import com.sixbbq.gamept.api.dnf.dto.buff.buffEquip.BuffEquipment;
+import com.sixbbq.gamept.api.dnf.dto.creature.Artifact;
 import com.sixbbq.gamept.api.dnf.dto.creature.Creature;
 import com.sixbbq.gamept.api.dnf.dto.equip.Equip;
 import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffEquip.BuffSkill;
+import com.sixbbq.gamept.api.dnf.dto.flag.Gems;
 import com.sixbbq.gamept.api.dnf.dto.skill.Skill;
+import com.sixbbq.gamept.api.dnf.dto.talisman.Runes;
+import com.sixbbq.gamept.api.dnf.dto.talisman.Talisman;
+import com.sixbbq.gamept.api.dnf.dto.talisman.Talismans;
 import com.sixbbq.gamept.api.dnf.dto.type.CharacterDetailType;
 import com.sixbbq.gamept.api.dnf.util.DFUtil;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -166,20 +172,37 @@ public class DFService {
                             dto.setEquipment(objectMapper.convertValue(characterDetails.get("equipment"), new TypeReference<>() {}));
                             dto.setSetItemInfo(objectMapper.convertValue(characterDetails.get("setItemInfo"), new TypeReference<>() {}));
                             for(Equip equip : dto.getEquipment()) {
-                                equip.setItemImage(DFUtil.buildEquipmentImageUrl(ITEM_IMAGE_BASE_URL, equip.getItemId()));
+                                equip.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, equip.getItemId()));
                             }
                             break;
                         case AVATAR:
                             dto.setAvatar(objectMapper.convertValue(characterDetails.get("avatar"), new TypeReference<>() {}));
+                            for(Avatar avatar : dto.getAvatar()) {
+                                avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
+                            }
                             break;
                         case CREATURE:
                             dto.setCreature(objectMapper.convertValue(characterDetails.get("creature"), Creature.class));
+                            dto.getCreature().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, characterId));
+                            for(Artifact artifact : dto.getCreature().getArtifact()) {
+                                artifact.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, artifact.getItemId()));
+                            }
                             break;
                         case FLAG:
                             dto.setFlag(objectMapper.convertValue(characterDetails.get("flag"), Flag.class));
+                            dto.getFlag().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, characterId));
+                            for(Gems gem : dto.getFlag().getGems()) {
+                                gem.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, gem.getItemId()));
+                            }
                             break;
                         case TALISMAN:
                             dto.setTalismans(objectMapper.convertValue(characterDetails.get("talismans"), new TypeReference<>() {}));
+                            for(Talismans talismans : dto.getTalismans()) {
+                                talismans.getTalisman().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, talismans.getTalisman().getItemId()));
+                                for(Runes runes : talismans.getRunes()) {
+                                    runes.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, runes.getItemId()));
+                                }
+                            }
                             break;
                         case SKILL:
                             dto.setSkill(objectMapper.convertValue(characterDetails.get("skill"), Skill.class));
@@ -194,6 +217,16 @@ public class DFService {
 //                                            .filter(skill -> skill.getLevel() != null && skill.getLevel() != 1)
 //                                            .collect(Collectors.toList())
 //                            );
+                            for(BuffEquipment buff : dto.getSkill().getBuff().getEquipment()) {
+                                buff.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, buff.getItemId()));
+                            }
+                            for(BuffAvatar avatar : dto.getSkill().getBuff().getAvatar()) {
+                                avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
+                            }
+                            for(BuffCreature creature : dto.getSkill().getBuff().getCreature()) {
+                                creature.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, creature.getItemId()));
+
+                            }
                             break;
                         case BUFF_EQUIPMENT:
                             if (dto.getSkill() == null) dto.setSkill(new Skill());
