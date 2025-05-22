@@ -131,7 +131,7 @@ public class CharacterRegistService {
     }
 
     /**
-     * 모험단명으로 사용자의 캐릭터 조회
+     * 유저 아이디로 사용자의 캐릭터 조회
      */
     @Transactional
     public List<CharacterRegist> getCharactersByAdventureName(String userId) {

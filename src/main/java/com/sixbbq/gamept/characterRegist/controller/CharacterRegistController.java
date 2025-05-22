@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -27,11 +29,15 @@ public class CharacterRegistController {
         this.characterService = characterService;
     }
 
+    /**
+     * 계정에 모험단 혹은 캐릭터 추가
+     */
     @PostMapping
-    public ResponseEntity<?> registerCharacter(HttpSession session, @RequestBody CharacterRegistRequestDto requestDTO) {
+    public ResponseEntity<?> registerCharacter(@RequestBody CharacterRegistRequestDto requestDTO) {
+
         // 1. 로그인 상태 확인
-        String userId = (String) session.getAttribute("LOGGED_IN_MEMBER_ID");
-        log.info("캐릭터 등록 요청: userId={}, requestData={}", userId, requestDTO);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
         
         if (userId == null) {
             log.warn("비로그인 상태에서 캐릭터 등록 시도");
@@ -54,13 +60,13 @@ public class CharacterRegistController {
     }
 
     /**
-     * 모험단에 속한 캐릭터 제거
+     * 계정에 속한 캐릭터 제거
      */
     @DeleteMapping()
-    public ResponseEntity<?> deleteCharacter(HttpSession session, @RequestParam String characterId) {
+    public ResponseEntity<?> deleteCharacter(@RequestParam String characterId) {
         // 1. 로그인 상태 확인
-        String userId = (String) session.getAttribute("LOGGED_IN_MEMBER_ID");
-        log.info("캐릭터 삭제 요청: userId={}, requestData={}", userId, characterId);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
 
         if (userId == null) {
             log.warn("비로그인 상태에서 캐릭터 삭제 시도");
@@ -89,9 +95,10 @@ public class CharacterRegistController {
      * 계정에 속한 캐릭터 조회
      */
     @GetMapping("/adventure")
-    public ResponseEntity<?> getAdventureCharacters(HttpSession session) {
-        String userId = (String) session.getAttribute("LOGGED_IN_MEMBER_ID");
-        log.info("모험단 캐릭터 조회 요청: userId={}, adventureName={}", userId);
+    public ResponseEntity<?> getAdventureCharacters() {
+        // 1. 로그인 상태 확인
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
 
         if (userId == null) {
             log.warn("비로그인 상태에서 모험단 캐릭터 조회 시도");
