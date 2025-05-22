@@ -1,11 +1,16 @@
 package com.sixbbq.gamept.api.dnf.controller;
 
+import com.sixbbq.gamept.api.dnf.dto.DFCharacterInfoResponseAIDTO;
+import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
-import com.sixbbq.gamept.redis.RedisChatService;
+import com.sixbbq.gamept.redis.service.RedisChatService;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.LifecycleState;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -17,6 +22,9 @@ public class DFController {
 
     private final DFService dfService;
     private final RedisChatService redisChatService;
+    private static final String CHARACTER_KEY_PREFIX = "character";
+    private static final String CHAT_KEY_PREFIX = "chat";
+    private static final String RESPONSE_KEY_PREFIX = "response";
 
     /**
      * 1. 던파 캐릭터 검색 API
@@ -50,28 +58,88 @@ public class DFController {
     @GetMapping("/character")
     public ResponseEntity<?> getCharacterInfo(@RequestParam String server, @RequestParam String characterId) {
         try {
+            DFCharacterResponseDTO characterInfo = redisChatService.getCharacterInfo(CHARACTER_KEY_PREFIX, characterId);
+            if(characterInfo == null)
+                return ResponseEntity.ok(dfService.getCharacterInfo(server, characterId));
+            else
+                return ResponseEntity.ok(characterInfo);
+        } catch (Exception e) {
+            throw new NoSuchElementException(e);
+        }
+    }
+
+    /**
+     * 3. 던파 캐릭터 정보 갱신 API
+     * [요청 방식]
+     * GET /api/df/character/refresh?server={serverId}&characterId={characterId}
+     *
+     * @param server      서버 ID (영문 식별자)
+     * @param characterId 캐릭터 ID
+     * @return            캐릭터 상세 정보 (JSON)
+     */
+    @GetMapping("/character/refresh")
+    public ResponseEntity<?> refreshCharacterInfo(@RequestParam String server, @RequestParam String characterId) {
+        try {
             return ResponseEntity.ok(dfService.getCharacterInfo(server, characterId));
         } catch (Exception e) {
             throw new NoSuchElementException(e);
         }
-
     }
 
-    @PostMapping("/ai/addchat")
-    public ResponseEntity<?> addChat(@RequestParam String characterId, @RequestParam String chatMessage) {
-        List<String> chat = redisChatService.getChat(characterId);
-        // 추후 ai한테 메세지 전달하기
+    /**
+     * 4. 캐릭터의 AI채팅 API
+     * @param characterId 채팅창의 주체가 되는 캐릭터
+     * @param questionMessage 질문 내용
+     * @return 질문에 대한 AI의 응답
+     */
+    @PostMapping("/chat")
+    public ResponseEntity<?> addChat(@RequestParam String characterId, @RequestParam String questionMessage) {
+        try {
+            List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, characterId);
+            DFCharacterResponseDTO getCharacterInfo = redisChatService.getCharacterInfo(CHARACTER_KEY_PREFIX, characterId);
+            DFCharacterInfoResponseAIDTO dto = new DFCharacterInfoResponseAIDTO(getCharacterInfo);
 
-        redisChatService.addChatMessage(characterId, chatMessage);
+            // AI한테 데이터를 보내는 코드 작성
 
-        return ResponseEntity.ok().build();
+            if(getChat.size() >= 5) {
+                Map<String,String> response = new HashMap<>();
+                response.put("message", "한도를 초과하였습니다. 채팅방이 초기화 됩니다.");
+                return ResponseEntity.ok().body(response);
+            }
+
+            // 임시로 하드코딩된 응답 사용
+            String aiResponse = "안녕하세요! 저는 당신의 던전앤파이터 AI 어시스턴트입니다. 무엇을 도와드릴까요?";
+
+            // 사용자 메시지 저장
+            redisChatService.addChatMessage(CHAT_KEY_PREFIX, characterId, questionMessage);
+            // AI 응답 저장
+            redisChatService.addChatMessage(RESPONSE_KEY_PREFIX, characterId, aiResponse);
+
+            return ResponseEntity.ok(Map.of("response", aiResponse));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "채팅 메시지 처리 실패"));
+        }
     }
 
-    @DeleteMapping("/ai/deletechat")
+    /**
+     * 5. 캐릭터 AI채팅 내역 초기화
+     * @param characterId 채팅내역을 초기화할 캐릭터
+     * @return 채팅 초기화 여부
+     */
+    @DeleteMapping("/chat")
     public ResponseEntity<?> deleteChat(@RequestParam String characterId) {
-        redisChatService.clearChat(characterId);
+        try {
+            redisChatService.clearChat(CHAT_KEY_PREFIX, characterId);
+            redisChatService.clearChat(RESPONSE_KEY_PREFIX, characterId);
+        } catch (Exception e) {
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "실패!");
+            return ResponseEntity.badRequest().body(response);
+        }
 
-        return ResponseEntity.ok().build();
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "초기화에 성공했습니다.");
+        return ResponseEntity.ok().body(response);
     }
 
     /**

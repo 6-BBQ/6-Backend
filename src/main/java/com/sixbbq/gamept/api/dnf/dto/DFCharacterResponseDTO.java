@@ -29,6 +29,9 @@ public class DFCharacterResponseDTO {
     private String serverId;
     private String adventureName;
     private String guildName;
+    private String jobName;
+    private String jobGrowName;
+    private String fame;
     private LocalDateTime lastUpdated;
     private List<Equip> equipment;
     private List<SetItemInfo> setItemInfo;
