@@ -51,3 +51,8 @@
     api:
       base-url: https://developer-lostark.game.onstove.com
       token: ${LOA_API_KEY}
+
+  jwt:
+    secret: ${JWT_SECRET}
+    accessTokenExpirationMs: ${JWT_ACCESS_TOKEN_EXPIRATION_MS}
+    refreshTokenExpirationMs: ${JWT_REFRESH_TOKEN_EXPIRATION_MS}

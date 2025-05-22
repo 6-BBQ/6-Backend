@@ -47,18 +47,18 @@ public class MemberService {
     }
 
     // 로그인
-    @Transactional(readOnly = true)
-    public Member login(LoginDto loginDto) {
-        Member member = memberRepository.findById(loginDto.getUserId())
-                .orElse(null);
-
-        // 회원이 존재하고 비밀번호가 일치하는 경우
-        if (member != null && passwordEncoder.matches(loginDto.getPassword(), member.getPassword())) {
-            return member;
-        }
-
-        return null;
-    }
+//    @Transactional(readOnly = true)
+//    public Member login(LoginDto loginDto) {
+//        Member member = memberRepository.findById(loginDto.getUserId())
+//                .orElse(null);
+//
+//        // 회원이 존재하고 비밀번호가 일치하는 경우
+//        if (member != null && passwordEncoder.matches(loginDto.getPassword(), member.getPassword())) {
+//            return member;
+//        }
+//
+//        return null;
+//    }
 
     // ID로 회원 조회
     @Transactional(readOnly = true)

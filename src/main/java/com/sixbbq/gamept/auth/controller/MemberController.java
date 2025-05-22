@@ -2,12 +2,18 @@ package com.sixbbq.gamept.auth.controller;
 
 import com.sixbbq.gamept.auth.dto.LoginDto;
 import com.sixbbq.gamept.auth.dto.SignupDto;
+import com.sixbbq.gamept.auth.dto.TokenDto;
+import com.sixbbq.gamept.auth.dto.TokenRequestDto;
 import com.sixbbq.gamept.auth.entity.Member;
+import com.sixbbq.gamept.auth.service.AuthService;
 import com.sixbbq.gamept.auth.service.MemberService;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -15,14 +21,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class MemberController {
 
     private final MemberService memberService;
-
-    @Autowired
-    public MemberController(MemberService memberService) {
-        this.memberService = memberService;
-    }
+    private final AuthService authService;
 
     // 회원가입 API
     @PostMapping("/signup")
@@ -51,29 +54,44 @@ public class MemberController {
 
     // 로그인 API
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDto loginDto, HttpSession session) {
+    public ResponseEntity<?> login(@RequestBody LoginDto loginDto) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Member member = memberService.login(loginDto);
-            if (member != null) {
-                // 세션에 로그인 정보 저장
-                session.setAttribute("LOGGED_IN_MEMBER_ID", member.getUserId());
+            // JWT 토큰 발급
+            TokenDto tokenDto = authService.login(loginDto);
 
-                response.put("success", true);
-                response.put("message", "로그인 성공");
-                response.put("userId", member.getUserId());
-                response.put("nickname", member.getNickname());
-                return ResponseEntity.ok(response);
-            } else {
-                response.put("success", false);
-                response.put("message", "아이디 또는 비밀번호가 일치하지 않습니다.");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-            }
+            // 사용자 정보 조회
+            Member member = memberService.findById(loginDto.getUserId());
+
+            response.put("message", "로그인 성공");
+            response.put("accessToken", tokenDto.getAccessToken());
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "로그인 중 오류가 발생했습니다: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+    }
+
+    // 토큰 재발급 API
+    @PostMapping("/reissue")
+    public ResponseEntity<?> reissue(@RequestBody TokenRequestDto tokenRequestDto) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            TokenDto tokenDto = authService.reissue(tokenRequestDto);
+
+            response.put("success", true);
+            response.put("message", "토큰 재발급 성공");
+            response.put("token", tokenDto);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "토큰 재발급 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
     }
 
@@ -92,17 +110,14 @@ public class MemberController {
 
     // 현재 로그인한 회원 정보 조회 API
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentMember(HttpSession session) {
+    public ResponseEntity<?> getCurrentMember() {
         Map<String, Object> response = new HashMap<>();
 
-        String userId = (String) session.getAttribute("LOGGED_IN_MEMBER_ID");
-        if (userId == null) {
-            response.put("success", false);
-            response.put("message", "로그인 상태가 아닙니다.");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
-
         try {
+            // Spring Security Context에서 인증 정보 가져오기
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userId = authentication.getName();
+
             Member member = memberService.findById(userId);
             if (member != null) {
                 response.put("success", true);
