@@ -10,7 +10,7 @@
 ```GET``` /api/df/character : 던파 캐릭터 상세조회  
 ```POST``` /api/characters : 회원에 모험단 혹은 캐릭터 등록  
 ```DELETE``` /api/characters : 회원에 속한 캐릭터 제거  
-```GET``` /api/characters/adventure : 회원에 속한캐릭터 전체 조회
+```GET``` /api/characters/adventure : 회원에 속한 캐릭터 전체 조회
 
 ## DB 생성
 ```
