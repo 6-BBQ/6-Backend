@@ -53,6 +53,16 @@ public class AuthService {
         return tokenDto;
     }
 
+    // 로그아웃
+    @Transactional
+    public void logout(String accessToken) {
+        // Access Token에서 userId 추출
+        String userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+        // 해당 사용자의 RefreshToken 삭제
+        refreshTokenRepository.deleteByUserId(userId);
+    }
+
+
     @Transactional
     public TokenDto reissue(TokenRequestDto tokenRequestDto) {
         // Refresh Token 검증

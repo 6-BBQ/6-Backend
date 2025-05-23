@@ -5,6 +5,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.util.Date;
 
+@Slf4j
 @Component
 public class JwtTokenProvider {
 
@@ -99,17 +101,23 @@ public class JwtTokenProvider {
         }
     }
 
+    // 유효한 토큰에서 userId 추출
+    public String getUserIdFromToken(String token) {
+        Claims claims = parseClaims(token);
+        return claims.getSubject();
+    }
+
     // 만료된 토큰에서 userId 추출
     public String getUserIdFromExpiredToken(String token) {
         try {
-            Claims claims = Jwts.parserBuilder()
+            return Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token)
-                    .getBody();
-            return claims.getSubject();
+                    .getBody()
+                    .getSubject(); // userId
         } catch (ExpiredJwtException e) {
-            return e.getClaims().getSubject();
+            return e.getClaims().getSubject(); // 만료된 경우도 여기서 추출 가능
         }
     }
 

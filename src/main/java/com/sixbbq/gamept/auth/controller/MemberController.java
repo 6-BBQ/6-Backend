@@ -5,6 +5,7 @@ import com.sixbbq.gamept.auth.entity.Member;
 import com.sixbbq.gamept.auth.service.AuthService;
 import com.sixbbq.gamept.auth.service.EmailService;
 import com.sixbbq.gamept.auth.service.MemberService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -156,18 +157,23 @@ public class MemberController {
 
     // 로그아웃 API
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpSession session) {
-        log.info("/api/auth/logout : POST");
-        log.info("session : {}", session);
-
-        session.removeAttribute("LOGGED_IN_MEMBER_ID");
-        session.invalidate();
-
+    public ResponseEntity<?> logout(HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", "로그아웃 되었습니다.");
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String accessToken = authHeader.substring(7);
+                authService.logout(accessToken); // JWT 토큰으로 로그아웃 처리
+            }
 
-        return ResponseEntity.ok(response);
+            response.put("success", true);
+            response.put("message", "로그아웃 되었습니다.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "로그아웃 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     // 현재 로그인한 회원 정보 조회 API
