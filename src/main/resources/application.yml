@@ -38,6 +38,8 @@
             auth: true
             starttls:
               enable: true
+            ssl:
+              trust: "*"
   springdoc:
     swagger-ui:
       path: /swagger-ui.html
