@@ -7,6 +7,7 @@ import com.sixbbq.gamept.auth.service.EmailService;
 import com.sixbbq.gamept.auth.service.MemberService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -28,6 +30,9 @@ public class MemberController {
     // 이메일 인증 코드 발송 API
     @PostMapping("/send-verification")
     public ResponseEntity<?> sendVerificationEmail(@RequestBody EmailRequestDto emailRequestDto) {
+        log.info("/api/auth/send-verification : POST");
+        log.info("emailRequestDto : {}", emailRequestDto);
+
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -46,6 +51,9 @@ public class MemberController {
     // 이메일 인증 확인 API
     @PostMapping("/verify-email")
     public ResponseEntity<?> verifyEmail(@RequestBody EmailVerificationDto emailVerificationDto) {
+        log.info("/api/auth/verify-email : POST");
+        log.info("emailVerificationDto : {}", emailVerificationDto);
+
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -73,6 +81,9 @@ public class MemberController {
     // 회원가입 API
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody SignupDto signupDto) {
+        log.info("/api/auth/signup : POST");
+        log.info("signupDto : {}", signupDto);
+
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -97,6 +108,9 @@ public class MemberController {
     // 로그인 API
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginDto loginDto) {
+        log.info("/api/auth/login : POST");
+        log.info("loginDto : {}", loginDto);
+
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -120,6 +134,9 @@ public class MemberController {
     // 토큰 재발급 API
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(@RequestBody TokenRequestDto tokenRequestDto) {
+        log.info("/api/auth/reissue : POST");
+        log.info("tokenRequestDto : {}", tokenRequestDto);
+
         Map<String, Object> response = new HashMap<>();
 
         try {
@@ -140,6 +157,9 @@ public class MemberController {
     // 로그아웃 API
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpSession session) {
+        log.info("/api/auth/logout : POST");
+        log.info("session : {}", session);
+
         session.removeAttribute("LOGGED_IN_MEMBER_ID");
         session.invalidate();
 
@@ -153,6 +173,8 @@ public class MemberController {
     // 현재 로그인한 회원 정보 조회 API
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentMember() {
+        log.info("/api/auth/me : GET");
+
         Map<String, Object> response = new HashMap<>();
 
         try {

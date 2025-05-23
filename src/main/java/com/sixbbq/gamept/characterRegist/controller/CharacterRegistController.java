@@ -34,6 +34,8 @@ public class CharacterRegistController {
      */
     @PostMapping
     public ResponseEntity<?> registerCharacter(@RequestBody CharacterRegistRequestDto requestDTO) {
+        log.info("/api/characters : POST");
+        log.info("requestDTO : {}", requestDTO);
 
         // 1. 로그인 상태 확인
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -64,6 +66,8 @@ public class CharacterRegistController {
      */
     @DeleteMapping()
     public ResponseEntity<?> deleteCharacter(@RequestParam String characterId) {
+        log.info("/api/characters : DELETE");
+        log.info("characterId : {}", characterId);
         // 1. 로그인 상태 확인
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication.getName();
@@ -96,6 +100,7 @@ public class CharacterRegistController {
      */
     @GetMapping("/adventure")
     public ResponseEntity<?> getAdventureCharacters() {
+        log.info("/api/adventure : GET");
         // 1. 로그인 상태 확인
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication.getName();

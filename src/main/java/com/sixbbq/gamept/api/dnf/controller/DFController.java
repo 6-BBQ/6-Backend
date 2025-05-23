@@ -11,6 +11,7 @@ import com.sixbbq.gamept.jwt.JwtTokenProvider;
 import com.sixbbq.gamept.redis.service.RedisChatService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.catalina.LifecycleState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/df")
 @RequiredArgsConstructor
@@ -50,6 +52,8 @@ public class DFController {
      */
     @GetMapping("/search")
     public ResponseEntity<?> searchCharacter(@RequestParam String server, @RequestParam String name) {
+        log.info("/api/df/search : GET");
+        log.info("server : {}, name : {}", server, name);
         try {
             return ResponseEntity.ok(dfService.processSearchRequest(server, name));
         } catch (Exception e) {
@@ -69,6 +73,8 @@ public class DFController {
      */
     @GetMapping("/character")
     public ResponseEntity<?> getCharacterInfo(@RequestParam String server, @RequestParam String characterId) {
+        log.info("/api/df/character : GET");
+        log.info("server : {}, characterId : {}", server, characterId);
         try {
             DFCharacterResponseDTO characterInfo = redisChatService.getCharacterInfo(CHARACTER_KEY_PREFIX, characterId);
             if(characterInfo == null)
@@ -91,6 +97,8 @@ public class DFController {
      */
     @GetMapping("/character/refresh")
     public ResponseEntity<?> refreshCharacterInfo(@RequestParam String server, @RequestParam String characterId) {
+        log.info("/api/df/character/refresh : GET");
+        log.info("server : {}, characterId : {}", server, characterId);
         try {
             return ResponseEntity.ok(dfService.getCharacterInfo(server, characterId));
         } catch (Exception e) {
@@ -100,12 +108,15 @@ public class DFController {
 
     /**
      * 4. 캐릭터의 AI채팅 API
-     * @param chatRequest 채팅창과 관련된 정보[캐릭터Id, 질문, 질문에 대한 응답]
+     * @param characterId 채팅창에 주체가 되는 캐릭터Id
+     * @param questionMessage 질문 메세지
      * @return 질문에 대한 AI의 응답
      */
     @PostMapping("/chat")
     public ResponseEntity<?> addChat(@RequestParam String characterId, @RequestParam String questionMessage,
                                      HttpServletRequest request) {
+        log.info("/api/df/chat : POST");
+        log.info("characterId : {}, questionMessage : {}", characterId, questionMessage);
         try {
             List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, characterId);
             if(getChat.size() >= 5) {
@@ -140,30 +151,6 @@ public class DFController {
             return ResponseEntity.badRequest().body(Map.of("error", "채팅 메시지 처리 실패"));
         }
     }
-//    @PostMapping("/chat")
-//    public ResponseEntity<?> addChat(@RequestBody ChatRequest chatRequest) {
-//        try {
-//            List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, chatRequest.getCharacterId());
-//
-//            // 사용자 메시지 저장
-//            redisChatService.addChatMessage(CHAT_KEY_PREFIX, chatRequest.getCharacterId(), chatRequest.getChatQuestionMessage());
-//            // AI 응답 저장
-//            redisChatService.addChatMessage(RESPONSE_KEY_PREFIX, chatRequest.getCharacterId(), chatRequest.getChatAnswerMessage());
-//
-//            if(getChat.size() >= 5) {
-//                Map<String,String> response = new HashMap<>();
-//                response.put("status", "실패");
-//                response.put("message", "한도를 초과하였습니다. 채팅방이 초기화 됩니다.");
-//                redisChatService.clearChat(CHAT_KEY_PREFIX, chatRequest.getCharacterId());
-//                redisChatService.clearChat(RESPONSE_KEY_PREFIX, chatRequest.getCharacterId());
-//                return ResponseEntity.ok().body(response);
-//            }
-//
-//            return ResponseEntity.ok(Map.of("status", "성공","message", "저장 성공"));
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest().body(Map.of("error", "채팅 메시지 처리 실패"));
-//        }
-//    }
 
     /**
      * 5. 캐릭터 AI채팅 내역 초기화
@@ -172,6 +159,8 @@ public class DFController {
      */
     @DeleteMapping("/chat")
     public ResponseEntity<?> deleteChat(@RequestParam String characterId) {
+        log.info("/api/df/chat : DELETE");
+        log.info("characterId : {}", characterId);
         try {
             redisChatService.clearChat(CHAT_KEY_PREFIX, characterId);
             redisChatService.clearChat(RESPONSE_KEY_PREFIX, characterId);
