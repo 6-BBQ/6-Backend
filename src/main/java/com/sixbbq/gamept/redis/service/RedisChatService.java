@@ -86,48 +86,6 @@ public class RedisChatService {
     }
 
     /**
-     * 특정 캐릭터 ID에 대해 더미 채팅 메시지 여러 개를 한번에 추가하는 메서드
-     * @param characterId 캐릭터 ID
-     */
-//    public void addDummyChatMessages(String characterId) {
-//        if (!StringUtils.hasText(characterId)) {
-//            log.warn("Invalid characterId for addDummyChatMessages: {}", characterId);
-//            return;
-//        }
-//
-//        String redisKey = buildChatKey(characterId);
-//        ListOperations<String, String> listOps = redisTemplate.opsForList();
-//
-//        // 더미 메시지 ChatMessageDto 리스트 생성
-//        List<ChatMessageDto> dummyMessages = List.of(
-//                new ChatMessageDto("안녕하세요! 환영합니다.", "system", characterId, LocalDateTime.now()),
-//                new ChatMessageDto("오늘은 어떤 모험을 떠날까요?", "system", characterId, LocalDateTime.now()),
-//                new ChatMessageDto("조심하세요, 몬스터가 나타났어요!", "system", characterId, LocalDateTime.now()),
-//                new ChatMessageDto("잘했어요! 경험치를 얻었습니다.", "system", characterId, LocalDateTime.now()),
-//                new ChatMessageDto("다음 레벨까지 힘내세요!", "system", characterId, LocalDateTime.now()),
-//                new ChatMessageDto("아이템을 획득했습니다.", "system", characterId, LocalDateTime.now()),
-//                new ChatMessageDto("채팅 더미 데이터가 성공적으로 추가되었습니다.", "system", characterId, LocalDateTime.now())
-//        );
-//
-//        // 기존 채팅 삭제
-//        redisTemplate.delete(redisKey);
-//
-//        // 각 메시지를 JSON으로 직렬화해서 Redis에 저장
-//        dummyMessages.forEach(msg -> {
-//            try {
-//                String json = objectMapper.writeValueAsString(msg);
-//                listOps.rightPush(redisKey, json);
-//            } catch (Exception e) {
-//                log.error("Failed to serialize dummy message: {}", e.getMessage());
-//            }
-//        });
-//
-//        redisTemplate.expire(redisKey, EXPIRED_DAY, TimeUnit.DAYS);
-//
-//        log.info("Added dummy chat messages for characterId [{}]", characterId);
-//    }
-
-    /**
      * Redis에 캐릭터 정보를 저장하는 메서드
      * @param key 저장할 키 (예: "character:characterId")
      * @param value 저장할 캐릭터 정보 (Map 형식)

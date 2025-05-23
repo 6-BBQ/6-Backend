@@ -28,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -261,6 +262,7 @@ public class DFService {
 
                 String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, dto.getServerId(), characterId, 2);
                 dto.setImageUrl(imageUrl);
+                dto.setLastUpdated(LocalDateTime.now());
 
                 // Redis에 캐릭터 상세 정보와 요약정보 저장
                 try {

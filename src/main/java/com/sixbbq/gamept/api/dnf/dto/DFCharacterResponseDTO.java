@@ -25,6 +25,7 @@ public class DFCharacterResponseDTO {
 
     private String characterId;
     private String characterName;
+    private Integer level;
     private String imageUrl;
     private String serverId;
     private String adventureName;
