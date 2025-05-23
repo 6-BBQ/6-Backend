@@ -3,10 +3,13 @@ package com.sixbbq.gamept.api.dnf.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterInfoResponseAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
+import com.sixbbq.gamept.api.dnf.dto.RequestAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.ResponseAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.request.ChatRequest;
 import com.sixbbq.gamept.api.dnf.service.DFService;
+import com.sixbbq.gamept.jwt.JwtTokenProvider;
 import com.sixbbq.gamept.redis.service.RedisChatService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.LifecycleState;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,7 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class DFController {
     private final RestTemplate restTemplate;
+    private final JwtTokenProvider tokenProvider;
     @Value("${ai.url}")
     private String aiURL;
 
@@ -100,7 +104,8 @@ public class DFController {
      * @return 질문에 대한 AI의 응답
      */
     @PostMapping("/chat")
-    public ResponseEntity<?> addChat(@RequestParam String characterId, @RequestParam String questionMessage) {
+    public ResponseEntity<?> addChat(@RequestParam String characterId, @RequestParam String questionMessage,
+                                     HttpServletRequest request) {
         try {
             List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, characterId);
             if(getChat.size() >= 5) {
@@ -109,12 +114,17 @@ public class DFController {
                 return ResponseEntity.ok().body(response);
             }
 
+            List<String> getResponse = redisChatService.getChat(RESPONSE_KEY_PREFIX, characterId);
+
             DFCharacterResponseDTO getCharacterInfo = redisChatService.getCharacterInfo(CHARACTER_KEY_PREFIX, characterId);
             DFCharacterInfoResponseAIDTO dto = new DFCharacterInfoResponseAIDTO(getCharacterInfo);
+            String token = tokenProvider.extractJwtToken(request);
+
+            RequestAIDTO requestDTO = new RequestAIDTO(questionMessage, token, dto, getChat, getResponse);
 
             // AI한테 데이터를 보내는 코드 작성
             String url = aiURL + "/api/df/chat";
-            ResponseEntity<String> getResponseAI = restTemplate.getForEntity(url, String.class);
+            ResponseEntity<String> getResponseAI = restTemplate.postForEntity(url, requestDTO, String.class);
             String json = getResponseAI.getBody();
 
             ObjectMapper mapper = new ObjectMapper();

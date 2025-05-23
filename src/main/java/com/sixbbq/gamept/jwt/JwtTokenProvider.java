@@ -4,6 +4,7 @@ import com.sixbbq.gamept.auth.dto.TokenDto;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -110,6 +111,16 @@ public class JwtTokenProvider {
         } catch (ExpiredJwtException e) {
             return e.getClaims().getSubject();
         }
+    }
+
+    public String extractJwtToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7); // "Bearer " 이후의 토큰 값만 추출
+        }
+
+        return null; // 또는 예외 던지기
     }
 
 }
