@@ -75,3 +75,6 @@
     accessTokenExpirationMs: ${JWT_ACCESS_TOKEN_EXPIRATION_MS}
     refreshTokenExpirationMs: ${JWT_REFRESH_TOKEN_EXPIRATION_MS}
 
+  ai:
+    url: ${AI_URL}
+
