@@ -43,6 +43,7 @@ public class SecurityConfig {
                                 "/api/auth/send-verification",
                                 "/api/auth/verify-email",
                                 "/api/df/search",
+                                "/api/auth/check-email-duplicate",
                                 // Swagger UI 접근 허용
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",

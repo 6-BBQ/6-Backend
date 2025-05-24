@@ -77,4 +77,10 @@ public class MemberService {
     public Member findById(String userId) {
         return memberRepository.findById(userId).orElse(null);
     }
+
+    // 이메일 중복체크
+    @Transactional(readOnly = true)
+    public boolean isEmailDuplicate(String email) {
+        return memberRepository.existsByEmail(email);
+    }
 }

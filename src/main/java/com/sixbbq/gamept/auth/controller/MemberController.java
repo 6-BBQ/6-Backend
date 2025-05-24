@@ -37,6 +37,14 @@ public class MemberController {
         Map<String, Object> response = new HashMap<>();
 
         try {
+            // 이메일 중복 체크 추가
+            if (memberService.isEmailDuplicate(emailRequestDto.getEmail())) {
+                response.put("success", false);
+                response.put("message", "이미 사용 중인 이메일입니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // 중복이 아니면 인증코드 발송
             emailService.sendVerificationEmail(emailRequestDto.getEmail());
 
             response.put("success", true);
