@@ -2,6 +2,7 @@ package com.sixbbq.gamept.auth.controller;
 
 import com.sixbbq.gamept.auth.dto.*;
 import com.sixbbq.gamept.auth.entity.Member;
+import com.sixbbq.gamept.auth.repository.MemberRepository;
 import com.sixbbq.gamept.auth.service.AuthService;
 import com.sixbbq.gamept.auth.service.EmailService;
 import com.sixbbq.gamept.auth.service.MemberService;
@@ -27,6 +28,7 @@ public class MemberController {
     private final MemberService memberService;
     private final AuthService authService;
     private final EmailService emailService;
+    private final MemberRepository memberRepository;
 
     // 이메일 인증 코드 발송 API
     @PostMapping("/send-verification")
@@ -137,6 +139,32 @@ public class MemberController {
             response.put("success", false);
             response.put("message", "로그인 중 오류가 발생했습니다: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+    }
+
+    @PostMapping("/check-userid")
+    public ResponseEntity<?> checkUserId(@RequestBody UserIdRequestDto userIdRequestDto) {
+        log.info("/api/auth/check-userid : POST");
+        log.info("userIdRequestDto : {}", userIdRequestDto);
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            // 아이디 중복 체크
+            if (memberRepository.existsById(userIdRequestDto.getUserId())) {
+                response.put("success", false);
+                response.put("message", "이미 사용 중인 아이디입니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // 중복이 아니면 성공 응답
+            response.put("success", true);
+            response.put("message", "사용 가능한 아이디입니다.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "아이디 확인 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
