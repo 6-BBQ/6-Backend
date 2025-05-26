@@ -235,6 +235,9 @@ public class DFService {
                             if (dto.getSkill() == null) dto.setSkill(new Skill());
                             dto.getSkill().setBuff(objectMapper.convertValue(
                                     ((Map<?, ?>) ((Map<?, ?>) characterDetails.get("skill")).get("buff")), BuffSkill.class));
+                            for(BuffEquipment equipment : dto.getSkill().getBuff().getEquipment()) {
+                                equipment.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, equipment.getItemId()));
+                            }
                             break;
                         case BUFF_AVATAR:
                             if (dto.getSkill() == null) dto.setSkill(new Skill());
@@ -245,6 +248,9 @@ public class DFService {
                                 dto.getSkill().getBuff().setAvatar(
                                         objectMapper.convertValue(buffMapAvatar.get("avatar"), new TypeReference<List<BuffAvatar>>() {}));
                             }
+                            for(BuffAvatar avatar : dto.getSkill().getBuff().getAvatar()) {
+                                avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
+                            }
                             break;
                         case BUFF_CREATURE:
                             if (dto.getSkill() == null) dto.setSkill(new Skill());
@@ -254,6 +260,9 @@ public class DFService {
                             } else {
                                 dto.getSkill().getBuff().setCreature(
                                         objectMapper.convertValue(buffMapCreature.get("creature"), new TypeReference<List<BuffCreature>>() {}));
+                            }
+                            for(BuffCreature creature : dto.getSkill().getBuff().getCreature()) {
+                                creature.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, creature.getItemId()));
                             }
                             break;
 
