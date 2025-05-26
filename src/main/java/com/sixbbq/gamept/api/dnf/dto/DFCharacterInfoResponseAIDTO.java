@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 @Setter
 @ToString
 @AllArgsConstructor
+// 캐릭터의 요약 정보[AI한테 데이터 보내주기 용]
 public class DFCharacterInfoResponseAIDTO {
     private String jobGrowName;
     private String jobName;
@@ -49,8 +50,8 @@ public class DFCharacterInfoResponseAIDTO {
         this.titleName = dto.getEquipment().stream()
                 .filter(equip -> equip.getSlotName().equals("칭호"))
                 .findFirst()
-                .map(Equip::getItemName)
-                .orElse("칭호 없음");
+                .map(Equip::getItemName) // 찾았을 경우 getItemName 호출
+                .orElse("칭호 없음"); // 찾지 못했을 경우 안전한 기본값 설정
         this.setItemInfoAI = dto.getSetItemInfo().stream()
                 .map(SetItemInfoAI::new) // SetItemInfo를 SetItemInfoAI로 변환
                 .collect(Collectors.toList()); // List로 수집
@@ -58,7 +59,7 @@ public class DFCharacterInfoResponseAIDTO {
         this.setAuraName(dto.getAvatar().stream()
                 .filter(avatar -> avatar.getSlotName().equals("오라 아바타"))
                 .findFirst()
-                .map(Avatar::getItemName) // 찾았을 경우 getItemName 호출
-                .orElse("오라 없음")); // 찾지 못했을 경우 안전한 기본값 설정
+                .map(Avatar::getItemName)
+                .orElse("오라 없음"));
     }
 }

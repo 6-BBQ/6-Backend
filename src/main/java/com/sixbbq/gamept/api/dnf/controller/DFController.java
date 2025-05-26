@@ -141,6 +141,7 @@ public class DFController {
             // AI 응답 저장
             redisChatService.addChatMessage(RESPONSE_KEY_PREFIX, characterId, aiDTO.getAnswer());
 
+            // 이번이 4번째 채팅일 경우 초기화
             if(getChat.size() >= 3) {
                 Map<String,String> response = new HashMap<>();
                 response.put("message", "한도를 초과하였습니다. 채팅방이 초기화 됩니다.");

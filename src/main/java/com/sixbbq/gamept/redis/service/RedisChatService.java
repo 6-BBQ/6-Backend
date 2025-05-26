@@ -35,8 +35,10 @@ public class RedisChatService {
         objectMapper.registerModule(new JavaTimeModule());
     }
 
+
     /**
      * redis에 List 구조로 채팅 내역 저장
+     * @param suffixKey 저장할 키의 설명값[character, AiResponse 등]
      * @param characterId 저장할 키값[캐릭터id]
      * @param message 저장할 메세지
      */
@@ -54,7 +56,8 @@ public class RedisChatService {
     }
 
     /**
-     * redis에 저장된 채팅 내역 불러오기
+     * redis에 저장된 내역 불러오기
+     * @param suffixKey 불러올 키의 설명값[character, AiResponse 등]
      * @param characterId 불러올 키값[캐릭터id]
      * @return 저장된 메세지
      */
@@ -71,7 +74,8 @@ public class RedisChatService {
     }
 
     /**
-     * redis에 저장된 채팅 내역 삭제
+     * redis에 저장된 내역 삭제
+     * @param suffixKey 삭제할 키의 설명값[character, AiResponse 등]
      * @param characterId 삭제할 키값[캐릭터id]
      */
     public void clearChat(String suffixKey, String characterId) {
@@ -87,7 +91,7 @@ public class RedisChatService {
 
     /**
      * Redis에 캐릭터 정보를 저장하는 메서드
-     * @param key 저장할 키 (예: "character:characterId")
+     * @param key 저장할 키 (예: "character:{characterId}")
      * @param value 저장할 캐릭터 정보 (Map 형식)
      */
     public void setCharacterInfo(String key, DFCharacterResponseDTO value) {
@@ -103,6 +107,12 @@ public class RedisChatService {
         }
     }
 
+    /**
+     * 캐릭터의 전체 정보 조회
+     * @param suffixKey 조회할 키의 설명값[현재는 character 고정]
+     * @param key 조회할 키 값
+     * @return 조회한 데이터
+     */
     public DFCharacterResponseDTO getCharacterInfo(String suffixKey, String key) {
         try {
             String redisKey = suffixKey + ":" + key;

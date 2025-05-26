@@ -157,11 +157,11 @@ public class DFService {
                     if (type == CharacterDetailType.SKILL) {
                         apiUrl = DFUtil.buildCharacterSkillStyleApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey);
                     } else if (type == CharacterDetailType.BUFF_EQUIPMENT) {
-                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, "equipment");
+                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, type.getValue());
                     } else if (type == CharacterDetailType.BUFF_AVATAR) {
-                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, "avatar");
+                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, type.getValue());
                     } else if (type == CharacterDetailType.BUFF_CREATURE) {
-                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, "creature");
+                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, type.getValue());
                     } else {
                         apiUrl = DFUtil.buildCharacterDetailInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, type.getValue());
                     }

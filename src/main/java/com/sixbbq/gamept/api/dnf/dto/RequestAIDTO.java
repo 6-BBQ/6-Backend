@@ -9,6 +9,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+// AI한테 보내줄 데이터 형식 클래스
 public class RequestAIDTO {
     private String query;
     private String jwtToken;
