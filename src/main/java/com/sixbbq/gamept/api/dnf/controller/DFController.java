@@ -6,6 +6,8 @@ import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.RequestAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.ResponseAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.request.ChatRequest;
+import com.sixbbq.gamept.api.dnf.dto.request.SpecCheckRequestDTO;
+import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
 import com.sixbbq.gamept.jwt.JwtTokenProvider;
 import com.sixbbq.gamept.redis.service.RedisChatService;
@@ -16,6 +18,8 @@ import org.apache.catalina.LifecycleState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -145,6 +149,8 @@ public class DFController {
             if(getChat.size() >= 3) {
                 Map<String,String> response = new HashMap<>();
                 response.put("message", "한도를 초과하였습니다. 채팅방이 초기화 됩니다.");
+                redisChatService.clearChat(CHAT_KEY_PREFIX, characterId);
+                redisChatService.clearChat(RESPONSE_KEY_PREFIX, characterId);
                 return ResponseEntity.ok().body(response);
             }
 
