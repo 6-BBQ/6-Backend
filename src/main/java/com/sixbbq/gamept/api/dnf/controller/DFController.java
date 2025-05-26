@@ -119,11 +119,6 @@ public class DFController {
         log.info("characterId : {}, questionMessage : {}", characterId, questionMessage);
         try {
             List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, characterId);
-            if(getChat.size() >= 5) {
-                Map<String,String> response = new HashMap<>();
-                response.put("message", "한도를 초과하였습니다. 채팅방이 초기화 됩니다.");
-                return ResponseEntity.ok().body(response);
-            }
 
             List<String> getResponse = redisChatService.getChat(RESPONSE_KEY_PREFIX, characterId);
 
@@ -145,6 +140,12 @@ public class DFController {
             redisChatService.addChatMessage(CHAT_KEY_PREFIX, characterId, questionMessage);
             // AI 응답 저장
             redisChatService.addChatMessage(RESPONSE_KEY_PREFIX, characterId, aiDTO.getAnswer());
+
+            if(getChat.size() >= 3) {
+                Map<String,String> response = new HashMap<>();
+                response.put("message", "한도를 초과하였습니다. 채팅방이 초기화 됩니다.");
+                return ResponseEntity.ok().body(response);
+            }
 
             return ResponseEntity.ok(Map.of("response", aiDTO));
         } catch (Exception e) {
