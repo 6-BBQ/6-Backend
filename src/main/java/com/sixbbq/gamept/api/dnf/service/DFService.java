@@ -12,6 +12,9 @@ import com.sixbbq.gamept.api.dnf.dto.equip.Equip;
 import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffEquip.BuffSkill;
 import com.sixbbq.gamept.api.dnf.dto.flag.Gems;
+import com.sixbbq.gamept.api.dnf.dto.request.SpecCheckRequestDTO;
+import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckResponseDTO;
+import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckUserInfo;
 import com.sixbbq.gamept.api.dnf.dto.skill.Skill;
 import com.sixbbq.gamept.api.dnf.dto.talisman.Runes;
 import com.sixbbq.gamept.api.dnf.dto.talisman.Talismans;
@@ -291,4 +294,17 @@ public class DFService {
     }
 
 
+    public SpecCheckResponseDTO specCheck(SpecCheckRequestDTO requestDTO) {
+        SpecCheckResponseDTO responseDTO = new SpecCheckResponseDTO();
+
+        for (SpecCheckUserInfo userInfo : requestDTO.getCheckUserList()) {
+            Map<String, Object> userInfoMap = searchCharacterByServerAndName(userInfo.getUserName(), userInfo.getUserServer());
+            String characterId = userInfoMap.get("characterId").toString();
+            String serverId = userInfoMap.get("serverId").toString();
+
+            DFCharacterResponseDTO characterInfo = getCharacterInfo(characterId, serverId);
+        }
+
+        return null;
+    }
 }

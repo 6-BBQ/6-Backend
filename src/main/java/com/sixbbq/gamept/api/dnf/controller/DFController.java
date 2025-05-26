@@ -156,6 +156,7 @@ public class DFController {
 
             return ResponseEntity.ok(Map.of("response", aiDTO));
         } catch (Exception e) {
+            log.error(e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", "채팅 메시지 처리 실패"));
         }
     }
@@ -181,6 +182,21 @@ public class DFController {
         Map<String, String> response = new HashMap<>();
         response.put("message", "초기화에 성공했습니다.");
         return ResponseEntity.ok().body(response);
+    }
+
+    @GetMapping("/spec-check")
+    public ResponseEntity<?> checkSpec(@Validated @RequestBody SpecCheckRequestDTO requestDTO,
+                                       BindingResult result) {
+        log.info("/api/df/spec-check : GET");
+        log.info("requestDTO : {}", requestDTO);
+
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body(result.getAllErrors().get(0).getDefaultMessage());
+        }
+
+        SpecCheckResponseDTO responseResult = dfService.specCheck(requestDTO);
+
+        return null;
     }
 
     /**
