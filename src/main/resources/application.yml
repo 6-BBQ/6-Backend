@@ -78,3 +78,7 @@
   ai:
     url: ${AI_URL}
 
+  logging:
+    logstash:
+      host: ${LOGSTASH_URL}
+      port: ${LOGSTASH_PORT}
