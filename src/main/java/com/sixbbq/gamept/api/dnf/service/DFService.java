@@ -192,7 +192,7 @@ public class DFService {
                             break;
                         case FLAG:
                             dto.setFlag(objectMapper.convertValue(characterDetails.get("flag"), Flag.class));
-                            dto.getFlag().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, characterId));
+                            dto.getFlag().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, dto.getFlag().getItemId()));
                             for(Gems gem : dto.getFlag().getGems()) {
                                 gem.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, gem.getItemId()));
                             }
