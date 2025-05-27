@@ -10,7 +10,7 @@ import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
 import com.sixbbq.gamept.jwt.JwtTokenProvider;
 import com.sixbbq.gamept.redis.service.RedisChatService;
-//import com.sixbbq.gamept.util.ErrorUtil;
+import com.sixbbq.gamept.util.ErrorUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +35,8 @@ public class DFController {
     private final JwtTokenProvider tokenProvider;
     @Value("${ai.url}")
     private String aiURL;
-//    @Value("${discord.admin-name}")
-//    private String discordAdminName;
+    @Value("${discord.admin-name}")
+    private String discordAdminName;
 
     private final DFService dfService;
     private final RedisChatService redisChatService;
@@ -155,7 +155,7 @@ public class DFController {
 
             return ResponseEntity.ok().body(aiDTO);
         } catch (Exception e) {
-//            ErrorUtil.logError(e, request, discordAdminName);
+            ErrorUtil.logError(e, request, discordAdminName);
             log.error(e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", "채팅 메시지 처리 실패"));
         }
@@ -174,7 +174,7 @@ public class DFController {
             redisChatService.clearChat(CHAT_KEY_PREFIX, characterId);
             redisChatService.clearChat(RESPONSE_KEY_PREFIX, characterId);
         } catch (Exception e) {
-//            ErrorUtil.logError(e, request, discordAdminName);
+            ErrorUtil.logError(e, request, discordAdminName);
             Map<String, String> response = new HashMap<>();
             response.put("message", "채팅내역 초기화 실패");
             return ResponseEntity.badRequest().body(response);
@@ -207,7 +207,7 @@ public class DFController {
      */
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<?> handleException(Exception e, HttpServletRequest request) {
-//        ErrorUtil.logError(e, request, discordAdminName);
+        ErrorUtil.logError(e, request, discordAdminName);
         Map<String, String> error = Map.of("error", e.getMessage());
         return ResponseEntity.badRequest().body(error);
     }

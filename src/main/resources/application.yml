@@ -78,3 +78,7 @@
   ai:
     url: ${AI_URL}
 
+  discord:
+    url: ${DISCORD_WEBHOOK_URL}
+    admin-discord-id: ${ADMIN_DISCORD-ID-CODE}
+    admin-name: ${ADMIN_NAME}

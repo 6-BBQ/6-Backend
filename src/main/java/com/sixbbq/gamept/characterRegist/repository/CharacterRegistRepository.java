@@ -20,7 +20,7 @@ public interface CharacterRegistRepository extends JpaRepository<CharacterRegist
           WHERE adventure_name = :adventureName
           GROUP BY character_id
       )
-""", nativeQuery = true)
+          """, nativeQuery = true)
     List<CharacterRegist> findDistinctCharacterIdByAdventureName(@Param("adventureName") String adventureName);
 
     boolean existsByUserIdAndCharacterId(String userId, String characterId);
