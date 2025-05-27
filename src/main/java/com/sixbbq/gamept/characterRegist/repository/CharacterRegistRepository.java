@@ -10,8 +10,7 @@ import java.util.Optional;
 @Repository
 public interface CharacterRegistRepository extends JpaRepository<CharacterRegist, Long> {
     List<CharacterRegist> findByUserId(String userId);
+    List<CharacterRegist> findByAdventureName(String adventureName);
     boolean existsByUserIdAndCharacterId(String userId, String characterId);
     Optional<CharacterRegist> findByUserIdAndCharacterId(String userId, String characterId);
-    boolean existsByCharacterId(String characterId);
-    List<CharacterRegist> findByUserIdAndAdventureName(String userId, String adventureName);
 }
