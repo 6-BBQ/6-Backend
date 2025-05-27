@@ -17,7 +17,7 @@ public class DFCharacterService {
 
     @Transactional(readOnly = true)
     public List<DFCharacterResponseDTO> findByAdventureName(String adventureName) {
-        return characterRegistRepository.findByAdventureName(adventureName)
+        return characterRegistRepository.findDistinctCharacterIdByAdventureName(adventureName)
                 .stream()
                 .map(dfCharacter -> DFCharacterResponseDTO.builder()
                         .characterId(dfCharacter.getCharacterId())
