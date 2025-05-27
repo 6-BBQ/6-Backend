@@ -8,6 +8,8 @@ import com.sixbbq.gamept.api.dnf.dto.ResponseAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.request.SpecCheckRequestDTO;
 import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
+import com.sixbbq.gamept.characterRegist.entity.CharacterRegist;
+import com.sixbbq.gamept.characterRegist.service.CharacterRegistService;
 import com.sixbbq.gamept.jwt.JwtTokenProvider;
 import com.sixbbq.gamept.redis.service.RedisChatService;
 import com.sixbbq.gamept.util.ErrorUtil;
@@ -16,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +44,8 @@ public class DFController {
 
     private final DFService dfService;
     private final RedisChatService redisChatService;
+    private final CharacterRegistService characterRegistService;
+
     private static final String CHARACTER_KEY_PREFIX = "character";
     private static final String CHAT_KEY_PREFIX = "chat";
     private static final String RESPONSE_KEY_PREFIX = "response";
@@ -122,13 +128,24 @@ public class DFController {
         log.info("/api/df/chat : POST");
         log.info("characterId : {}, questionMessage : {}", characterId, questionMessage);
         try {
-            List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, characterId);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userId = authentication.getName();
 
-            List<String> getResponse = redisChatService.getChat(RESPONSE_KEY_PREFIX, characterId);
+            CharacterRegist regist = characterRegistService.getCharacters(userId, characterId);
+            // 5번의 채팅이 존재한다면 채팅 거부하기
+            if(regist.getAiRequestCount() >= 5) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "한도에 도달했습니다.");
+                return ResponseEntity.ok().body(response);
+            }
 
             DFCharacterResponseDTO getCharacterInfo = redisChatService.getCharacterInfo(CHARACTER_KEY_PREFIX, characterId);
             DFCharacterInfoResponseAIDTO dto = new DFCharacterInfoResponseAIDTO(getCharacterInfo);
             String token = tokenProvider.extractJwtToken(request);
+
+            List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, characterId);
+            List<String> getResponse = redisChatService.getChat(RESPONSE_KEY_PREFIX, characterId);
 
             RequestAIDTO requestDTO = new RequestAIDTO(questionMessage, token, dto, getChat, getResponse);
 
@@ -144,14 +161,9 @@ public class DFController {
             redisChatService.addChatMessage(CHAT_KEY_PREFIX, characterId, questionMessage);
             // AI 응답 저장
             redisChatService.addChatMessage(RESPONSE_KEY_PREFIX, characterId, aiDTO.getAnswer());
-
-            // 이번이 4번째 채팅일 경우 초기화
-            if(getChat.size() >= 3) {
-                aiDTO.setMessage("채팅창 한도에 도달했습니다. 채팅 내역이 초기화됩니다.");
-                redisChatService.clearChat(CHAT_KEY_PREFIX, characterId);
-                redisChatService.clearChat(RESPONSE_KEY_PREFIX, characterId);
-                return ResponseEntity.ok().body(aiDTO);
-            }
+            // AI 사용 횟수 증가
+            characterRegistService.plusAICount(regist);
+            aiDTO.setAiRequestCount(regist.getAiRequestCount());
 
             return ResponseEntity.ok().body(aiDTO);
         } catch (Exception e) {

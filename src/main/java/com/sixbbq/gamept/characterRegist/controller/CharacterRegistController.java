@@ -4,7 +4,9 @@ import com.sixbbq.gamept.characterRegist.dto.CharacterRegistRequestDto;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistResponseDto;
 import com.sixbbq.gamept.characterRegist.entity.CharacterRegist;
 import com.sixbbq.gamept.characterRegist.service.CharacterRegistService;
+import com.sixbbq.gamept.redis.service.RedisChatService;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,7 @@ import org.slf4j.LoggerFactory;
 public class CharacterRegistController {
     private static final Logger log = LoggerFactory.getLogger(CharacterRegistController.class);
     private final CharacterRegistService characterService;
+
 
     @Autowired
     public CharacterRegistController(CharacterRegistService characterService) {
