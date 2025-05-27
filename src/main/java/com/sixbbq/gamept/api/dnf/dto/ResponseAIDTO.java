@@ -13,4 +13,5 @@ import lombok.ToString;
 public class ResponseAIDTO {
     private boolean success;
     private String answer;
+    private String message;
 }
