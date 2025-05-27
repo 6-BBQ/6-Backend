@@ -6,6 +6,8 @@ import com.sixbbq.gamept.auth.repository.MemberRepository;
 import com.sixbbq.gamept.auth.service.AuthService;
 import com.sixbbq.gamept.auth.service.EmailService;
 import com.sixbbq.gamept.auth.service.MemberService;
+import com.sixbbq.gamept.metrics.support.ApiMetricsRecorder;
+import io.micrometer.core.instrument.Timer;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,7 @@ public class MemberController {
     private final AuthService authService;
     private final EmailService emailService;
     private final MemberRepository memberRepository;
+    private final ApiMetricsRecorder apiMetricsRecorder;  // 🆕 API 메트릭 추가
 
     // 이메일 인증 코드 발송 API
     @PostMapping("/send-verification")
