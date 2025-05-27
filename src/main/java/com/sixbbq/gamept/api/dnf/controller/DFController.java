@@ -5,17 +5,19 @@ import com.sixbbq.gamept.api.dnf.dto.DFCharacterInfoResponseAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.RequestAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.ResponseAIDTO;
-import com.sixbbq.gamept.api.dnf.dto.request.ChatRequest;
+import com.sixbbq.gamept.api.dnf.dto.request.SpecCheckRequestDTO;
+import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
 import com.sixbbq.gamept.jwt.JwtTokenProvider;
 import com.sixbbq.gamept.redis.service.RedisChatService;
+//import com.sixbbq.gamept.util.ErrorUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.LifecycleState;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -33,6 +35,8 @@ public class DFController {
     private final JwtTokenProvider tokenProvider;
     @Value("${ai.url}")
     private String aiURL;
+//    @Value("${discord.admin-name}")
+//    private String discordAdminName;
 
     private final DFService dfService;
     private final RedisChatService redisChatService;
@@ -119,11 +123,6 @@ public class DFController {
         log.info("characterId : {}, questionMessage : {}", characterId, questionMessage);
         try {
             List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, characterId);
-            if(getChat.size() >= 5) {
-                Map<String,String> response = new HashMap<>();
-                response.put("message", "한도를 초과하였습니다. 채팅방이 초기화 됩니다.");
-                return ResponseEntity.ok().body(response);
-            }
 
             List<String> getResponse = redisChatService.getChat(RESPONSE_KEY_PREFIX, characterId);
 
@@ -146,8 +145,18 @@ public class DFController {
             // AI 응답 저장
             redisChatService.addChatMessage(RESPONSE_KEY_PREFIX, characterId, aiDTO.getAnswer());
 
-            return ResponseEntity.ok(Map.of("response", aiDTO));
+            // 이번이 4번째 채팅일 경우 초기화
+            if(getChat.size() >= 3) {
+                aiDTO.setMessage("채팅창 한도에 도달했습니다. 채팅 내역이 초기화됩니다.");
+                redisChatService.clearChat(CHAT_KEY_PREFIX, characterId);
+                redisChatService.clearChat(RESPONSE_KEY_PREFIX, characterId);
+                return ResponseEntity.ok().body(aiDTO);
+            }
+
+            return ResponseEntity.ok().body(aiDTO);
         } catch (Exception e) {
+//            ErrorUtil.logError(e, request, discordAdminName);
+            log.error(e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", "채팅 메시지 처리 실패"));
         }
     }
@@ -155,24 +164,40 @@ public class DFController {
     /**
      * 5. 캐릭터 AI채팅 내역 초기화
      * @param characterId 채팅내역을 초기화할 캐릭터
-     * @return 채팅 초기화 여부
+     * @return 채팅 초기화 성공 여부
      */
     @DeleteMapping("/chat")
-    public ResponseEntity<?> deleteChat(@RequestParam String characterId) {
+    public ResponseEntity<?> deleteChat(@RequestParam String characterId, HttpServletRequest request) {
         log.info("/api/df/chat : DELETE");
         log.info("characterId : {}", characterId);
         try {
             redisChatService.clearChat(CHAT_KEY_PREFIX, characterId);
             redisChatService.clearChat(RESPONSE_KEY_PREFIX, characterId);
         } catch (Exception e) {
+//            ErrorUtil.logError(e, request, discordAdminName);
             Map<String, String> response = new HashMap<>();
-            response.put("message", "실패!");
+            response.put("message", "채팅내역 초기화 실패");
             return ResponseEntity.badRequest().body(response);
         }
 
         Map<String, String> response = new HashMap<>();
-        response.put("message", "초기화에 성공했습니다.");
+        response.put("message", "채팅내역 초기화에 성공했습니다.");
         return ResponseEntity.ok().body(response);
+    }
+
+    @GetMapping("/spec-check")
+    public ResponseEntity<?> checkSpec(@Validated @RequestBody SpecCheckRequestDTO requestDTO,
+                                       BindingResult result) {
+        log.info("/api/df/spec-check : GET");
+        log.info("requestDTO : {}", requestDTO);
+
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body(result.getAllErrors().get(0).getDefaultMessage());
+        }
+
+        SpecCheckResponseDTO responseResult = dfService.specCheck(requestDTO);
+
+        return null;
     }
 
     /**
@@ -181,7 +206,8 @@ public class DFController {
      * @return 404코드로 에러 데이터 넣어서 처리
      */
     @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<?> handleException(Exception e) {
+    public ResponseEntity<?> handleException(Exception e, HttpServletRequest request) {
+//        ErrorUtil.logError(e, request, discordAdminName);
         Map<String, String> error = Map.of("error", e.getMessage());
         return ResponseEntity.badRequest().body(error);
     }

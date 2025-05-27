@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,7 +134,7 @@ public class CharacterRegistService {
      */
     @Transactional
     public List<CharacterRegist> getCharactersByAdventureName(String userId) {
-        log.info("모험단별 캐릭터 조회: userId={}, adventureName={}", userId);
+        log.info("모험단별 캐릭터 조회: userId={}", userId);
 
         return characterRegistRepository.findByUserId(userId);
     }

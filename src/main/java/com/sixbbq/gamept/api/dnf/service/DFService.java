@@ -12,6 +12,9 @@ import com.sixbbq.gamept.api.dnf.dto.equip.Equip;
 import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffEquip.BuffSkill;
 import com.sixbbq.gamept.api.dnf.dto.flag.Gems;
+import com.sixbbq.gamept.api.dnf.dto.request.SpecCheckRequestDTO;
+import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckResponseDTO;
+import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckUserInfo;
 import com.sixbbq.gamept.api.dnf.dto.skill.Skill;
 import com.sixbbq.gamept.api.dnf.dto.talisman.Runes;
 import com.sixbbq.gamept.api.dnf.dto.talisman.Talismans;
@@ -157,11 +160,11 @@ public class DFService {
                     if (type == CharacterDetailType.SKILL) {
                         apiUrl = DFUtil.buildCharacterSkillStyleApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey);
                     } else if (type == CharacterDetailType.BUFF_EQUIPMENT) {
-                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, "equipment");
+                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, type.getValue());
                     } else if (type == CharacterDetailType.BUFF_AVATAR) {
-                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, "avatar");
+                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, type.getValue());
                     } else if (type == CharacterDetailType.BUFF_CREATURE) {
-                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, "creature");
+                        apiUrl = DFUtil.buildCharacterBuffInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, type.getValue());
                     } else {
                         apiUrl = DFUtil.buildCharacterDetailInfoApiUrl(NEOPLE_API_BASE_URL, serverId, characterId, apiKey, type.getValue());
                     }
@@ -192,7 +195,7 @@ public class DFService {
                             break;
                         case FLAG:
                             dto.setFlag(objectMapper.convertValue(characterDetails.get("flag"), Flag.class));
-                            dto.getFlag().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, characterId));
+                            dto.getFlag().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, dto.getFlag().getItemId()));
                             for(Gems gem : dto.getFlag().getGems()) {
                                 gem.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, gem.getItemId()));
                             }
@@ -235,6 +238,9 @@ public class DFService {
                             if (dto.getSkill() == null) dto.setSkill(new Skill());
                             dto.getSkill().setBuff(objectMapper.convertValue(
                                     ((Map<?, ?>) ((Map<?, ?>) characterDetails.get("skill")).get("buff")), BuffSkill.class));
+                            for(BuffEquipment equipment : dto.getSkill().getBuff().getEquipment()) {
+                                equipment.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, equipment.getItemId()));
+                            }
                             break;
                         case BUFF_AVATAR:
                             if (dto.getSkill() == null) dto.setSkill(new Skill());
@@ -245,6 +251,9 @@ public class DFService {
                                 dto.getSkill().getBuff().setAvatar(
                                         objectMapper.convertValue(buffMapAvatar.get("avatar"), new TypeReference<List<BuffAvatar>>() {}));
                             }
+                            for(BuffAvatar avatar : dto.getSkill().getBuff().getAvatar()) {
+                                avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
+                            }
                             break;
                         case BUFF_CREATURE:
                             if (dto.getSkill() == null) dto.setSkill(new Skill());
@@ -254,6 +263,9 @@ public class DFService {
                             } else {
                                 dto.getSkill().getBuff().setCreature(
                                         objectMapper.convertValue(buffMapCreature.get("creature"), new TypeReference<List<BuffCreature>>() {}));
+                            }
+                            for(BuffCreature creature : dto.getSkill().getBuff().getCreature()) {
+                                creature.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, creature.getItemId()));
                             }
                             break;
 
@@ -282,4 +294,17 @@ public class DFService {
     }
 
 
+    public SpecCheckResponseDTO specCheck(SpecCheckRequestDTO requestDTO) {
+        SpecCheckResponseDTO responseDTO = new SpecCheckResponseDTO();
+
+        for (SpecCheckUserInfo userInfo : requestDTO.getCheckUserList()) {
+            Map<String, Object> userInfoMap = searchCharacterByServerAndName(userInfo.getUserName(), userInfo.getUserServer());
+            String characterId = userInfoMap.get("characterId").toString();
+            String serverId = userInfoMap.get("serverId").toString();
+
+            DFCharacterResponseDTO characterInfo = getCharacterInfo(characterId, serverId);
+        }
+
+        return null;
+    }
 }
