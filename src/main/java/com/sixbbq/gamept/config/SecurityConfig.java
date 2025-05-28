@@ -64,7 +64,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://www.rpgpt.store/","http://localhost:3000"));
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://www.rpgpt.store/",
+                "http://rpgpt.store/",
+                "https://www.rpgpt.store/",
+                "https://www.rpgpt.store/",
+                "http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
