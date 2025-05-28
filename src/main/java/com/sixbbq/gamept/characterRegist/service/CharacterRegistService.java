@@ -2,19 +2,19 @@ package com.sixbbq.gamept.characterRegist.service;
 
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
+import com.sixbbq.gamept.characterRegist.dto.CharacterRegistDTO;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistRequestDto;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistResponseDto;
 import com.sixbbq.gamept.characterRegist.entity.CharacterRegist;
 import com.sixbbq.gamept.characterRegist.repository.CharacterRegistRepository;
+import com.sixbbq.gamept.redis.service.RedisChatService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +24,17 @@ public class CharacterRegistService {
     private static final Logger log = LoggerFactory.getLogger(CharacterRegistService.class);
     private final CharacterRegistRepository characterRegistRepository;
     private final DFService dfService;
+    private final RedisChatService redisChatService;
+
+    private static final String CHARACTER_KEY_PREFIX = "character";
+    private static final String CHAT_KEY_PREFIX = "chat";
 
     @Autowired
-    public CharacterRegistService(CharacterRegistRepository characterRegistRepository, DFService dfService) {
+    public CharacterRegistService(CharacterRegistRepository characterRegistRepository, DFService dfService,
+                                  RedisChatService redisChatService) {
         this.characterRegistRepository = characterRegistRepository;
         this.dfService = dfService;
+        this.redisChatService = redisChatService;
     }
 
     @Transactional
@@ -133,10 +139,20 @@ public class CharacterRegistService {
      * 유저 아이디로 사용자의 캐릭터 조회
      */
     @Transactional
-    public List<CharacterRegist> getCharactersByAdventureName(String userId) {
+    public List<CharacterRegistDTO> getCharactersByAdventureName(String userId) {
         log.info("모험단별 캐릭터 조회: userId={}", userId);
 
-        return characterRegistRepository.findByUserId(userId);
+        List<CharacterRegist> searchCharacterList = characterRegistRepository.findByUserId(userId);
+        List<CharacterRegistDTO> characterList = new ArrayList<>();
+
+        for(CharacterRegist character : searchCharacterList) {
+            CharacterRegist regist = characterAIStackCheck(character);
+            characterList.add(new CharacterRegistDTO(regist));
+
+            redisChatService.clearChat(CHAT_KEY_PREFIX, character.getCharacterId());
+            redisChatService.clearChat(CHARACTER_KEY_PREFIX, character.getCharacterId());
+        }
+        return characterList;
     }
 
     public boolean deleteCharacter(String userId, String characterId) {
@@ -146,6 +162,40 @@ public class CharacterRegistService {
             return true;
         } else {
             return false;
+        }
+    }
+
+    public CharacterRegist getCharacters(String userId, String characterId) {
+        Optional<CharacterRegist> findCharacter = characterRegistRepository.findByUserIdAndCharacterId(userId, characterId);
+        if (findCharacter.isPresent()) {
+            return findCharacter.get();
+        } else {
+            throw new NoSuchElementException("캐릭터를 찾을 수 없습니다!");
+        }
+    }
+
+    public void plusAICount(CharacterRegist regist) {
+        if(regist.getAiRequestTime() == null)
+            regist.setAiRequestTime(LocalDateTime.now());
+        regist.setAiRequestCount(regist.getAiRequestCount() + 1);
+
+        characterRegistRepository.save(regist);
+    }
+
+    // 하루가 지났는지 체크하여 초기화 여부를 확인하는 메서드
+    public CharacterRegist characterAIStackCheck(CharacterRegist character) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime aiTime = character.getAiRequestTime();
+        LocalDateTime thresholdTime = aiTime.toLocalDate().plusDays(1).atStartOfDay();
+
+        if(now.isAfter(thresholdTime)) {
+            character.setAiRequestTime(null);
+            character.setAiRequestCount(0);
+            CharacterRegist save = characterRegistRepository.save(character);
+
+            return save;
+        } else {
+            return character;
         }
     }
 }

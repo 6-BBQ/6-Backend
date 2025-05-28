@@ -8,14 +8,18 @@ import com.sixbbq.gamept.api.dnf.dto.ResponseAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.request.SpecCheckRequestDTO;
 import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
+import com.sixbbq.gamept.characterRegist.entity.CharacterRegist;
+import com.sixbbq.gamept.characterRegist.service.CharacterRegistService;
 import com.sixbbq.gamept.jwt.JwtTokenProvider;
 import com.sixbbq.gamept.redis.service.RedisChatService;
-//import com.sixbbq.gamept.util.ErrorUtil;
+import com.sixbbq.gamept.util.ErrorUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -35,11 +39,13 @@ public class DFController {
     private final JwtTokenProvider tokenProvider;
     @Value("${ai.url}")
     private String aiURL;
-//    @Value("${discord.admin-name}")
-//    private String discordAdminName;
+    @Value("${discord.admin-name}")
+    private String discordAdminName;
 
     private final DFService dfService;
     private final RedisChatService redisChatService;
+    private final CharacterRegistService characterRegistService;
+
     private static final String CHARACTER_KEY_PREFIX = "character";
     private static final String CHAT_KEY_PREFIX = "chat";
     private static final String RESPONSE_KEY_PREFIX = "response";
@@ -122,13 +128,32 @@ public class DFController {
         log.info("/api/df/chat : POST");
         log.info("characterId : {}, questionMessage : {}", characterId, questionMessage);
         try {
-            List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, characterId);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userId = authentication.getName();
 
-            List<String> getResponse = redisChatService.getChat(RESPONSE_KEY_PREFIX, characterId);
+            CharacterRegist originalRegist = characterRegistService.getCharacters(userId, characterId);
+
+            // 하루가 지났다면 질문횟수 초기화 하기
+            CharacterRegist afterRegist = characterRegistService.characterAIStackCheck(originalRegist);
+
+            // 이전에 5번의 채팅기록이 존재한다면 채팅 거부하기
+            if(afterRegist.getAiRequestCount() >= 5) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "현재 채팅의 한도에 도달했습니다. 새 채팅을 만들어주세요!");
+
+                redisChatService.clearChat(CHAT_KEY_PREFIX, afterRegist.getCharacterId());
+                redisChatService.clearChat(CHARACTER_KEY_PREFIX, afterRegist.getCharacterId());
+
+                return ResponseEntity.ok().body(response);
+            }
 
             DFCharacterResponseDTO getCharacterInfo = redisChatService.getCharacterInfo(CHARACTER_KEY_PREFIX, characterId);
             DFCharacterInfoResponseAIDTO dto = new DFCharacterInfoResponseAIDTO(getCharacterInfo);
             String token = tokenProvider.extractJwtToken(request);
+
+            List<String> getChat = redisChatService.getChat(CHAT_KEY_PREFIX, characterId);
+            List<String> getResponse = redisChatService.getChat(RESPONSE_KEY_PREFIX, characterId);
 
             RequestAIDTO requestDTO = new RequestAIDTO(questionMessage, token, dto, getChat, getResponse);
 
@@ -144,20 +169,15 @@ public class DFController {
             redisChatService.addChatMessage(CHAT_KEY_PREFIX, characterId, questionMessage);
             // AI 응답 저장
             redisChatService.addChatMessage(RESPONSE_KEY_PREFIX, characterId, aiDTO.getAnswer());
-
-            // 이번이 4번째 채팅일 경우 초기화
-            if(getChat.size() >= 3) {
-                aiDTO.setMessage("채팅창 한도에 도달했습니다. 채팅 내역이 초기화됩니다.");
-                redisChatService.clearChat(CHAT_KEY_PREFIX, characterId);
-                redisChatService.clearChat(RESPONSE_KEY_PREFIX, characterId);
-                return ResponseEntity.ok().body(aiDTO);
-            }
+            // AI 사용 횟수 증가
+            characterRegistService.plusAICount(afterRegist);
+            aiDTO.setAiRequestCount(afterRegist.getAiRequestCount());
 
             return ResponseEntity.ok().body(aiDTO);
         } catch (Exception e) {
-//            ErrorUtil.logError(e, request, discordAdminName);
+            ErrorUtil.logError(e, request, discordAdminName);
             log.error(e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", "채팅 메시지 처리 실패"));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "채팅 메시지 처리 실패"));
         }
     }
 
@@ -174,7 +194,7 @@ public class DFController {
             redisChatService.clearChat(CHAT_KEY_PREFIX, characterId);
             redisChatService.clearChat(RESPONSE_KEY_PREFIX, characterId);
         } catch (Exception e) {
-//            ErrorUtil.logError(e, request, discordAdminName);
+            ErrorUtil.logError(e, request, discordAdminName);
             Map<String, String> response = new HashMap<>();
             response.put("message", "채팅내역 초기화 실패");
             return ResponseEntity.badRequest().body(response);
@@ -207,7 +227,7 @@ public class DFController {
      */
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<?> handleException(Exception e, HttpServletRequest request) {
-//        ErrorUtil.logError(e, request, discordAdminName);
+        ErrorUtil.logError(e, request, discordAdminName);
         Map<String, String> error = Map.of("error", e.getMessage());
         return ResponseEntity.badRequest().body(error);
     }
