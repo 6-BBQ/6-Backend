@@ -261,11 +261,16 @@ public class DFService {
                             if (dto.getSkill().getBuff() == null) {
                                 dto.getSkill().setBuff(objectMapper.convertValue(buffMapCreature, BuffSkill.class));
                             } else {
-                                dto.getSkill().getBuff().setCreature(
-                                        objectMapper.convertValue(buffMapCreature.get("creature"), new TypeReference<List<BuffCreature>>() {}));
+                                if (dto.getSkill().getBuff().getCreature() != null) {
+                                    dto.getSkill().getBuff().setCreature(
+                                            objectMapper.convertValue(buffMapCreature.get("creature"), new TypeReference<List<BuffCreature>>() {
+                                            }));
+                                }
                             }
-                            for(BuffCreature creature : dto.getSkill().getBuff().getCreature()) {
-                                creature.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, creature.getItemId()));
+                            if(dto.getSkill().getBuff().getCreature() != null) {
+                                for (BuffCreature creature : dto.getSkill().getBuff().getCreature()) {
+                                    creature.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, creature.getItemId()));
+                                }
                             }
                             break;
 
