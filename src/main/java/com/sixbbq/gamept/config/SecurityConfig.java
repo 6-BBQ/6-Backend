@@ -49,7 +49,13 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
-                                "/api-docs/**"
+                                "/api-docs/**",
+                                // Actuator 엔드포인트 접근 허용
+                                "/actuator/**",
+                                "/actuator/health",
+                                "/actuator/info",
+                                "/actuator/metrics/**",
+                                "/actuator/prometheus"
                         ).permitAll()
                         // 나머지 요청은 인증 필요
                         .anyRequest().authenticated()
