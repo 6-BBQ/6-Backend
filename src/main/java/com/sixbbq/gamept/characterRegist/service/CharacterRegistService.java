@@ -186,16 +186,17 @@ public class CharacterRegistService {
     public CharacterRegist characterAIStackCheck(CharacterRegist character) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime aiTime = character.getAiRequestTime();
-        LocalDateTime thresholdTime = aiTime.toLocalDate().plusDays(1).atStartOfDay();
+        if(aiTime != null) {
+            LocalDateTime thresholdTime = aiTime.toLocalDate().plusDays(1).atStartOfDay();
 
-        if(now.isAfter(thresholdTime)) {
-            character.setAiRequestTime(null);
-            character.setAiRequestCount(0);
-            CharacterRegist save = characterRegistRepository.save(character);
+            if(now.isAfter(thresholdTime)) {
+                character.setAiRequestTime(null);
+                character.setAiRequestCount(0);
+                CharacterRegist save = characterRegistRepository.save(character);
 
-            return save;
-        } else {
-            return character;
+                return save;
+            }
         }
+        return character;
     }
 }
