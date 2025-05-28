@@ -12,6 +12,10 @@
 ```DELETE``` /api/characters : 회원에 속한 캐릭터 제거  
 ```GET``` /api/characters/adventure : 회원에 속한 캐릭터 전체 조회
 
+## AI 관련 API 주소
+```POST``` /api/df/chat : 캐릭터 AI채팅 내역  
+```DELETE``` /api/df/chat : 캐릭터 AI채팅 내역 초기화  
+
 ## DB 생성
 ```
 CREATE DATABASE gamept;

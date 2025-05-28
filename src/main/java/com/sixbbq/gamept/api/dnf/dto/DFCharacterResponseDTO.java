@@ -21,8 +21,8 @@ import java.util.List;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Builder
+// 캐릭터의 자세한 정보
 public class DFCharacterResponseDTO {
-
     private String characterId;
     private String characterName;
     private Integer level;

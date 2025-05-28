@@ -33,4 +33,10 @@ public class CharacterRegist {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "ai_request_time")
+    private LocalDateTime aiRequestTime;
+
+    @Column(name = "ai_request_count")
+    private int aiRequestCount;
 }

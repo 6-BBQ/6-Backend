@@ -8,10 +8,11 @@ import com.sixbbq.gamept.auth.service.EmailService;
 import com.sixbbq.gamept.auth.service.MemberService;
 import com.sixbbq.gamept.metrics.support.ApiMetricsRecorder;
 import io.micrometer.core.instrument.Timer;
+import com.sixbbq.gamept.util.ErrorUtil;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -26,6 +27,8 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class MemberController {
+    @Value("${discord.admin-name}")
+    private String adminName;
 
     private final MemberService memberService;
     private final AuthService authService;
@@ -35,7 +38,7 @@ public class MemberController {
 
     // 이메일 인증 코드 발송 API
     @PostMapping("/send-verification")
-    public ResponseEntity<?> sendVerificationEmail(@RequestBody EmailRequestDto emailRequestDto) {
+    public ResponseEntity<?> sendVerificationEmail(@RequestBody EmailRequestDto emailRequestDto, HttpServletRequest request) {
         log.info("/api/auth/send-verification : POST");
         log.info("emailRequestDto : {}", emailRequestDto);
 
@@ -56,6 +59,7 @@ public class MemberController {
             response.put("message", "인증 코드가 이메일로 발송되었습니다.");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            ErrorUtil.logError(e, request, emailRequestDto.getEmail());
             response.put("success", false);
             response.put("message", "이메일 발송 중 오류가 발생했습니다: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -64,7 +68,8 @@ public class MemberController {
 
     // 이메일 인증 확인 API
     @PostMapping("/verify-email")
-    public ResponseEntity<?> verifyEmail(@RequestBody EmailVerificationDto emailVerificationDto) {
+    public ResponseEntity<?> verifyEmail(@RequestBody EmailVerificationDto emailVerificationDto,
+                                         HttpServletRequest request) {
         log.info("/api/auth/verify-email : POST");
         log.info("emailVerificationDto : {}", emailVerificationDto);
 
@@ -86,6 +91,7 @@ public class MemberController {
                 return ResponseEntity.badRequest().body(response);
             }
         } catch (Exception e) {
+            ErrorUtil.logError(e, request, emailVerificationDto.getEmail());
             response.put("success", false);
             response.put("message", "이메일 인증 중 오류가 발생했습니다: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -94,7 +100,7 @@ public class MemberController {
 
     // 회원가입 API
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody SignupDto signupDto) {
+    public ResponseEntity<?> signup(@RequestBody SignupDto signupDto, HttpServletRequest request) {
         log.info("/api/auth/signup : POST");
         log.info("signupDto : {}", signupDto);
 
@@ -113,6 +119,7 @@ public class MemberController {
             response.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
+            ErrorUtil.logError(e, request, signupDto.getUserId());
             response.put("success", false);
             response.put("message", "회원가입 중 오류가 발생했습니다: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -121,7 +128,7 @@ public class MemberController {
 
     // 로그인 API
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginDto loginDto) {
+    public ResponseEntity<?> login(@RequestBody LoginDto loginDto, HttpServletRequest request) {
         log.info("/api/auth/login : POST");
         log.info("loginDto : {}", loginDto);
 
@@ -146,7 +153,7 @@ public class MemberController {
     }
 
     @PostMapping("/check-userid")
-    public ResponseEntity<?> checkUserId(@RequestBody UserIdRequestDto userIdRequestDto) {
+    public ResponseEntity<?> checkUserId(@RequestBody UserIdRequestDto userIdRequestDto, HttpServletRequest request) {
         log.info("/api/auth/check-userid : POST");
         log.info("userIdRequestDto : {}", userIdRequestDto);
 
@@ -165,6 +172,7 @@ public class MemberController {
             response.put("message", "사용 가능한 아이디입니다.");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            ErrorUtil.logError(e, request, userIdRequestDto.getUserId());
             response.put("success", false);
             response.put("message", "아이디 확인 중 오류가 발생했습니다: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
@@ -173,7 +181,7 @@ public class MemberController {
 
     // 토큰 재발급 API
     @PostMapping("/reissue")
-    public ResponseEntity<?> reissue(@RequestBody TokenRequestDto tokenRequestDto) {
+    public ResponseEntity<?> reissue(@RequestBody TokenRequestDto tokenRequestDto, HttpServletRequest request) {
         log.info("/api/auth/reissue : POST");
         log.info("tokenRequestDto : {}", tokenRequestDto);
 
@@ -188,6 +196,7 @@ public class MemberController {
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            ErrorUtil.logError(e, request, tokenRequestDto.getRefreshToken());
             response.put("success", false);
             response.put("message", "토큰 재발급 중 오류가 발생했습니다: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
@@ -217,7 +226,7 @@ public class MemberController {
 
     // 현재 로그인한 회원 정보 조회 API
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentMember() {
+    public ResponseEntity<?> getCurrentMember(HttpServletRequest request) {
         log.info("/api/auth/me : GET");
 
         Map<String, Object> response = new HashMap<>();
@@ -240,6 +249,7 @@ public class MemberController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
         } catch (Exception e) {
+            ErrorUtil.logError(e, request, adminName);
             response.put("success", false);
             response.put("message", "회원 정보 조회 중 오류가 발생했습니다: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);

@@ -9,7 +9,10 @@ import lombok.ToString;
 @Setter
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
+// AI의 응답 데이터를 가져오는 클래스
 public class ResponseAIDTO {
     private boolean success;
     private String answer;
+    private String message;
+    private int aiRequestCount;
 }

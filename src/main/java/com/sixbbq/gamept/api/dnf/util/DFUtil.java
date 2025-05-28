@@ -82,12 +82,13 @@ public class DFUtil {
 
     /**
      * 캐릭터 버프 스킬 강화 API URL 생성
-     * getInfoUrl 목록 : equipment, avatar, creature
+     * getInfoUrl 공용 URL : skill/buff/equip/{infoUrl}
+     * infoUrl 목록 : equipment, avatar, creature
      */
 
     public static String buildCharacterBuffInfoApiUrl(String baseUrl, String serverId, String characterId, String apiKey, String getInfoUrl) {
         return UriComponentsBuilder
-                .fromUriString(baseUrl + "/servers/{server}/characters/{characterId}/skill/buff/equip/{getInfoUrl}")
+                .fromUriString(baseUrl + "/servers/{server}/characters/{characterId}/{getInfoUrl}")
                 .queryParam("apikey", apiKey)
                 .buildAndExpand(serverId, characterId, getInfoUrl)
                 .toUriString();
