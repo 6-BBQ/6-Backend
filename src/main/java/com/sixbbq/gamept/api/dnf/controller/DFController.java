@@ -131,12 +131,20 @@ public class DFController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String userId = authentication.getName();
 
-            CharacterRegist regist = characterRegistService.getCharacters(userId, characterId);
-            // 5번의 채팅이 존재한다면 채팅 거부하기
-            if(regist.getAiRequestCount() >= 5) {
+            CharacterRegist originalRegist = characterRegistService.getCharacters(userId, characterId);
+
+            // 하루가 지났다면 질문횟수 초기화 하기
+            CharacterRegist afterRegist = characterRegistService.characterAIStackCheck(originalRegist);
+
+            // 이전에 5번의 채팅기록이 존재한다면 채팅 거부하기
+            if(afterRegist.getAiRequestCount() >= 5) {
                 Map<String, Object> response = new HashMap<>();
-                response.put("success", true);
-                response.put("message", "한도에 도달했습니다.");
+                response.put("success", false);
+                response.put("message", "현재 채팅의 한도에 도달했습니다. 새 채팅을 만들어주세요!");
+
+                redisChatService.clearChat(CHAT_KEY_PREFIX, afterRegist.getCharacterId());
+                redisChatService.clearChat(CHARACTER_KEY_PREFIX, afterRegist.getCharacterId());
+
                 return ResponseEntity.ok().body(response);
             }
 
@@ -162,14 +170,14 @@ public class DFController {
             // AI 응답 저장
             redisChatService.addChatMessage(RESPONSE_KEY_PREFIX, characterId, aiDTO.getAnswer());
             // AI 사용 횟수 증가
-            characterRegistService.plusAICount(regist);
-            aiDTO.setAiRequestCount(regist.getAiRequestCount());
+            characterRegistService.plusAICount(afterRegist);
+            aiDTO.setAiRequestCount(afterRegist.getAiRequestCount());
 
             return ResponseEntity.ok().body(aiDTO);
         } catch (Exception e) {
             ErrorUtil.logError(e, request, discordAdminName);
             log.error(e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("error", "채팅 메시지 처리 실패"));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", "채팅 메시지 처리 실패"));
         }
     }
 

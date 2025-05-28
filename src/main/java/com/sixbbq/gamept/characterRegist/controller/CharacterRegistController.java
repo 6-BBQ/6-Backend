@@ -1,5 +1,6 @@
 package com.sixbbq.gamept.characterRegist.controller;
 
+import com.sixbbq.gamept.characterRegist.dto.CharacterRegistDTO;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistRequestDto;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistResponseDto;
 import com.sixbbq.gamept.characterRegist.entity.CharacterRegist;
@@ -117,7 +118,7 @@ public class CharacterRegistController {
         }
 
         try {
-            List<CharacterRegist> charactersByUserId = characterService.getCharactersByAdventureName(userId);
+            List<CharacterRegistDTO> charactersByUserId = characterService.getCharactersByAdventureName(userId);
 
             if(charactersByUserId.isEmpty()) {
                 Map<String, Object> response = new HashMap<>();

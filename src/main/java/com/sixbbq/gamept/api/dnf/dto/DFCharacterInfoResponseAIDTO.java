@@ -17,16 +17,16 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 // 캐릭터의 요약 정보[AI한테 데이터 보내주기 용]
 public class DFCharacterInfoResponseAIDTO {
-    private String jobGrowName;
-    private String jobName;
-    private String fame;
-    private WeaponEquip weaponEquip;
-    private Integer epicNum;
-    private Integer originalityNum;
-    private String titleName;
-    private List<SetItemInfoAI> setItemInfoAI;
-    private String creatureName;
-    private String auraName;
+    private String jobGrowName; // 각성 직업 명
+    private String jobName; // 직업명
+    private String fame; // 명성
+    private WeaponEquip weaponEquip; // 착용 장비 정보
+    private Integer epicNum; // 에픽 갯수
+    private Integer originalityNum; // 태초 개수
+    private String titleName; // 칭호 이름
+    private List<SetItemInfoAI> setItemInfoAI; // 세트 아이템
+    private String creatureName; // 크리처 이름
+    private String auraName; // 오라 이름
 
     public DFCharacterInfoResponseAIDTO(DFCharacterResponseDTO dto) {
         this.jobGrowName = dto.getJobGrowName();

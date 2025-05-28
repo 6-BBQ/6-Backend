@@ -2,6 +2,7 @@ package com.sixbbq.gamept.characterRegist.service;
 
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
+import com.sixbbq.gamept.characterRegist.dto.CharacterRegistDTO;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistRequestDto;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistResponseDto;
 import com.sixbbq.gamept.characterRegist.entity.CharacterRegist;
@@ -12,10 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,23 +139,18 @@ public class CharacterRegistService {
      * 유저 아이디로 사용자의 캐릭터 조회
      */
     @Transactional
-    public List<CharacterRegist> getCharactersByAdventureName(String userId) {
+    public List<CharacterRegistDTO> getCharactersByAdventureName(String userId) {
         log.info("모험단별 캐릭터 조회: userId={}", userId);
 
-        List<CharacterRegist> characterList = characterRegistRepository.findByUserId(userId);
+        List<CharacterRegist> searchCharacterList = characterRegistRepository.findByUserId(userId);
+        List<CharacterRegistDTO> characterList = new ArrayList<>();
 
-        for(CharacterRegist character : characterList) {
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime aiTime = character.getAiRequestTime();
-            LocalDateTime thresholdTime = aiTime.toLocalDate().plusDays(1).atStartOfDay();
-            if(now.isAfter(thresholdTime.minusDays(1))) {
-                character.setAiRequestTime(null);
-                character.setAiRequestCount(0);
-                characterRegistRepository.save(character);
+        for(CharacterRegist character : searchCharacterList) {
+            CharacterRegist regist = characterAIStackCheck(character);
+            characterList.add(new CharacterRegistDTO(regist));
 
-                redisChatService.clearChat(CHAT_KEY_PREFIX, character.getCharacterId());
-                redisChatService.clearChat(CHARACTER_KEY_PREFIX, character.getCharacterId());
-            }
+            redisChatService.clearChat(CHAT_KEY_PREFIX, character.getCharacterId());
+            redisChatService.clearChat(CHARACTER_KEY_PREFIX, character.getCharacterId());
         }
         return characterList;
     }
@@ -186,5 +180,22 @@ public class CharacterRegistService {
         regist.setAiRequestCount(regist.getAiRequestCount() + 1);
 
         characterRegistRepository.save(regist);
+    }
+
+    // 하루가 지났는지 체크하여 초기화 여부를 확인하는 메서드
+    public CharacterRegist characterAIStackCheck(CharacterRegist character) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime aiTime = character.getAiRequestTime();
+        LocalDateTime thresholdTime = aiTime.toLocalDate().plusDays(1).atStartOfDay();
+
+        if(now.isAfter(thresholdTime)) {
+            character.setAiRequestTime(null);
+            character.setAiRequestCount(0);
+            CharacterRegist save = characterRegistRepository.save(character);
+
+            return save;
+        } else {
+            return character;
+        }
     }
 }

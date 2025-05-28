@@ -276,7 +276,7 @@ public class DFService {
                 dto.setImageUrl(imageUrl);
                 dto.setLastUpdated(LocalDateTime.now());
 
-                // Redis에 캐릭터 상세 정보와 요약정보 저장
+                // Redis에 캐릭터 요약정보 저장
                 try {
                     String characterInfoKey = "character:" + characterId;
                     redisChatService.setCharacterInfo(characterInfoKey, dto);
