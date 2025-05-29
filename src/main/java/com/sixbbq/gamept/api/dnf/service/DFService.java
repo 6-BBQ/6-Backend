@@ -2,6 +2,7 @@ package com.sixbbq.gamept.api.dnf.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
+import com.sixbbq.gamept.api.dnf.dto.auction.AuctionResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.avatar.Avatar;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffAvatar.BuffAvatar;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffCreature.BuffCreature;
@@ -25,7 +26,9 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -40,8 +43,8 @@ public class DFService {
 
     private static final Logger log = LoggerFactory.getLogger(DFService.class);
     private final RestTemplate restTemplate;
-    private final DFCharacterService dfCharacterService;
     private final RedisChatService redisChatService;
+    private DFCharacterService dfCharacterService;
 
     @Value("${dnf.api.key}")
     private String apiKey;
@@ -298,6 +301,39 @@ public class DFService {
         }
     }
 
+    /**
+     * 아이템 이름으로 경매장 가격 조회
+     * @param itemName 아이템 이름
+     * @return 경매장 가격 (골드)
+     */
+    public Long getAuctionPrice(String itemName) {
+        try {
+            String apiUrl = String.format("%s/auction?itemName=%s&sort=unitPrice:asc&limit=1&apikey=%s",
+                    NEOPLE_API_BASE_URL,
+                    java.net.URLEncoder.encode(itemName, "UTF-8"),
+                    apiKey);
+
+            ResponseEntity<AuctionResponseDTO> response = restTemplate.exchange(
+                    apiUrl,
+                    HttpMethod.GET,
+                    null,
+                    AuctionResponseDTO.class
+            );
+
+            if (response.getBody() != null &&
+                    response.getBody().getRows() != null &&
+                    !response.getBody().getRows().isEmpty()) {
+                // 가장 낮은 가격의 아이템 가격 반환
+                return response.getBody().getRows().get(0).getUnitPrice();
+            }
+
+            log.warn("경매장에 등록된 아이템이 없습니다: {}", itemName);
+            return 0L;
+        } catch (Exception e) {
+            log.error("경매장 가격 조회 실패 (아이템: {}): {}", itemName, e.getMessage());
+            return 0L;
+        }
+    }
 
     public SpecCheckResponseDTO specCheck(SpecCheckRequestDTO requestDTO) {
         SpecCheckResponseDTO responseDTO = new SpecCheckResponseDTO();
