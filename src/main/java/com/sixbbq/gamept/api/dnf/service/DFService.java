@@ -179,37 +179,50 @@ public class DFService {
                     switch (type) {
                         case EQUIPMENT:
                             dto.setEquipment(objectMapper.convertValue(characterDetails.get("equipment"), new TypeReference<>() {}));
-                            dto.setSetItemInfo(objectMapper.convertValue(characterDetails.get("setItemInfo"), new TypeReference<>() {}));
-                            for(Equip equip : dto.getEquipment()) {
-                                equip.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, equip.getItemId()));
+                            if(dto.getEquipment() != null && !dto.getEquipment().isEmpty()) {
+                                dto.setSetItemInfo(objectMapper.convertValue(characterDetails.get("setItemInfo"), new TypeReference<>() {
+                                }));
+                                for (Equip equip : dto.getEquipment()) {
+                                    equip.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, equip.getItemId()));
+                                }
                             }
                             break;
                         case AVATAR:
-                            dto.setAvatar(objectMapper.convertValue(characterDetails.get("avatar"), new TypeReference<>() {}));
-                            for(Avatar avatar : dto.getAvatar()) {
-                                avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
-                            }
+                                dto.setAvatar(objectMapper.convertValue(characterDetails.get("avatar"), new TypeReference<>() {
+                                }));
+                                if(dto.getAvatar() != null && !dto.getAvatar().isEmpty()) {
+                                    for (Avatar avatar : dto.getAvatar()) {
+                                        avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
+                                    }
+                                }
                             break;
                         case CREATURE:
-                            dto.setCreature(objectMapper.convertValue(characterDetails.get("creature"), Creature.class));
-                            dto.getCreature().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, characterId));
-                            for(Artifact artifact : dto.getCreature().getArtifact()) {
-                                artifact.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, artifact.getItemId()));
-                            }
+                                dto.setCreature(objectMapper.convertValue(characterDetails.get("creature"), Creature.class));
+                                if(dto.getCreature() != null) {
+                                    dto.getCreature().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, characterId));
+                                    for (Artifact artifact : dto.getCreature().getArtifact()) {
+                                        artifact.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, artifact.getItemId()));
+                                    }
+                                }
                             break;
                         case FLAG:
-                            dto.setFlag(objectMapper.convertValue(characterDetails.get("flag"), Flag.class));
-                            dto.getFlag().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, dto.getFlag().getItemId()));
-                            for(Gems gem : dto.getFlag().getGems()) {
-                                gem.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, gem.getItemId()));
-                            }
+                                dto.setFlag(objectMapper.convertValue(characterDetails.get("flag"), Flag.class));
+                                if(dto.getFlag() != null) {
+                                    dto.getFlag().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, dto.getFlag().getItemId()));
+                                    for (Gems gem : dto.getFlag().getGems()) {
+                                        gem.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, gem.getItemId()));
+                                    }
+                                }
                             break;
                         case TALISMAN:
-                            dto.setTalismans(objectMapper.convertValue(characterDetails.get("talismans"), new TypeReference<>() {}));
-                            for(Talismans talismans : dto.getTalismans()) {
-                                talismans.getTalisman().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, talismans.getTalisman().getItemId()));
-                                for(Runes runes : talismans.getRunes()) {
-                                    runes.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, runes.getItemId()));
+                            if(characterDetails.get("talisman") != null) {
+                                dto.setTalismans(objectMapper.convertValue(characterDetails.get("talismans"), new TypeReference<>() {
+                                }));
+                                for (Talismans talismans : dto.getTalismans()) {
+                                    talismans.getTalisman().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, talismans.getTalisman().getItemId()));
+                                    for (Runes runes : talismans.getRunes()) {
+                                        runes.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, runes.getItemId()));
+                                    }
                                 }
                             }
                             break;
