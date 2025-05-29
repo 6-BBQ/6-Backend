@@ -255,8 +255,10 @@ public class DFService {
                             if (dto.getSkill() == null) dto.setSkill(new Skill());
                             dto.getSkill().setBuff(objectMapper.convertValue(
                                     ((Map<?, ?>) ((Map<?, ?>) characterDetails.get("skill")).get("buff")), BuffSkill.class));
-                            for(BuffEquipment equipment : dto.getSkill().getBuff().getEquipment()) {
-                                equipment.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, equipment.getItemId()));
+                            if(dto.getSkill().getBuff().getEquipment() != null) {
+                                for (BuffEquipment equipment : dto.getSkill().getBuff().getEquipment()) {
+                                    equipment.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, equipment.getItemId()));
+                                }
                             }
                             break;
                         case BUFF_AVATAR:
@@ -268,8 +270,10 @@ public class DFService {
                                 dto.getSkill().getBuff().setAvatar(
                                         objectMapper.convertValue(buffMapAvatar.get("avatar"), new TypeReference<List<BuffAvatar>>() {}));
                             }
-                            for(BuffAvatar avatar : dto.getSkill().getBuff().getAvatar()) {
-                                avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
+                            if(dto.getSkill().getBuff().getAvatar() != null) {
+                                for (BuffAvatar avatar : dto.getSkill().getBuff().getAvatar()) {
+                                    avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
+                                }
                             }
                             break;
                         case BUFF_CREATURE:
