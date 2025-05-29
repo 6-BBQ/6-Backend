@@ -143,7 +143,7 @@ public class DFController {
             if(afterRegist.getAiRequestCount() >= 5) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
-                response.put("message", "현재 채팅의 한도에 도달했습니다. 새 채팅을 만들어주세요!");
+                response.put("message", "일일 채팅의 한도에 도달했습니다.");
 
                 redisChatService.clearChat(CHAT_KEY_PREFIX, afterRegist.getCharacterId());
                 redisChatService.clearChat(CHARACTER_KEY_PREFIX, afterRegist.getCharacterId());
@@ -175,6 +175,10 @@ public class DFController {
             // AI 사용 횟수 증가
             characterRegistService.plusAICount(afterRegist);
             aiDTO.setAiRequestCount(afterRegist.getAiRequestCount());
+
+            if(getChat.size() >= 5 ) {
+                aiDTO.setLimitMessage("채팅 한도에 도달했습니다. 채팅을 초기화해주세요.");
+            }
 
             return ResponseEntity.ok().body(aiDTO);
         } catch (Exception e) {
