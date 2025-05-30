@@ -1,6 +1,7 @@
 package com.sixbbq.gamept.api.dnf.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sixbbq.gamept.api.dnf.dto.DFCharacterAuctionResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterInfoResponseAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.RequestAIDTO;
@@ -226,6 +227,83 @@ public class DFController {
 
         return null;
     }
+
+    /**
+     * 6. 캐릭터 아이템 가격 비교 API
+     * [요청 방식]
+     * GET /api/df/character/compare?server={serverId}&characterId={characterId}&compareServer={compareServerId}&compareCharacterId={compareCharacterId}
+     *
+     * @param server 서버 ID (영문 식별자)
+     * @param characterId 캐릭터 ID
+     * @param compareServer 비교할 캐릭터의 서버 ID
+     * @param compareCharacterId 비교할 캐릭터의 ID
+     * @return 두 캐릭터의 아이템 가격 비교 정보
+     */
+    @GetMapping("/character/compare")
+    public ResponseEntity<?> compareCharacterItems(
+            @RequestParam String server,
+            @RequestParam String characterId,
+            @RequestParam String compareServer,
+            @RequestParam String compareCharacterId) {
+        log.info("/api/df/character/compare : GET");
+        log.info("server: {}, characterId: {}, compareServer: {}, compareCharacterId: {}",
+                server, characterId, compareServer, compareCharacterId);
+
+        try {
+            // 현재 캐릭터 정보 조회
+            DFCharacterResponseDTO currentCharacter = dfService.getCharacterInfo(server, characterId);
+            DFCharacterInfoResponseAIDTO currentAI = new DFCharacterInfoResponseAIDTO(currentCharacter);
+
+            // 비교할 캐릭터 정보 조회
+            DFCharacterResponseDTO compareCharacter = dfService.getCharacterInfo(compareServer, compareCharacterId);
+            DFCharacterInfoResponseAIDTO compareAI = new DFCharacterInfoResponseAIDTO(compareCharacter);
+
+            // 경매장 정보 DTO 생성
+            DFCharacterAuctionResponseDTO currentAuction = new DFCharacterAuctionResponseDTO();
+            DFCharacterAuctionResponseDTO compareAuction = new DFCharacterAuctionResponseDTO();
+
+            // 크리쳐 가격 조회
+            if (currentAI.getCreatureName() != null) {
+                currentAuction.setCreaturePrice(dfService.getAuctionPrice(currentAI.getCreatureName()));
+            }
+            if (compareAI.getCreatureName() != null) {
+                compareAuction.setCreaturePrice(dfService.getAuctionPrice(compareAI.getCreatureName()));
+            }
+
+            // 칭호 가격 조회
+            if (currentAI.getTitleName() != null) {
+                currentAuction.setTitlePrice(dfService.getAuctionPrice(currentAI.getTitleName()));
+            }
+            if (compareAI.getTitleName() != null) {
+                compareAuction.setTitlePrice(dfService.getAuctionPrice(compareAI.getTitleName()));
+            }
+
+            // 오라 가격 조회
+            if (currentAI.getAuraName() != null) {
+                currentAuction.setAuraPrice(dfService.getAuctionPrice(currentAI.getAuraName()));
+            }
+            if (compareAI.getAuraName() != null) {
+                compareAuction.setAuraPrice(dfService.getAuctionPrice(compareAI.getAuraName()));
+            }
+
+            // 응답 데이터 구성
+            Map<String, Object> response = new HashMap<>();
+            response.put("currentCharacter", Map.of(
+                    "characterInfo", currentCharacter,
+                    "auctionInfo", currentAuction
+            ));
+            response.put("compareCharacter", Map.of(
+                    "characterInfo", compareCharacter,
+                    "auctionInfo", compareAuction
+            ));
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("캐릭터 아이템 비교 실패: {}", e.getMessage());
+            throw new NoSuchElementException("캐릭터 아이템 비교 중 오류가 발생했습니다.");
+        }
+    }
+
 
     /**
      * 에러 발생 시 오게되는 공통 Exception
