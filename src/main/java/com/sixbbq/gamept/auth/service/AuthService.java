@@ -42,7 +42,8 @@ public class AuthService {
 
             // 비밀번호 검증
             if (!passwordEncoder.matches(loginDto.getPassword(), member.getPassword())) {
-                authMetricsRecorder.counterLoginFailure("잘못된 비밀번호");  // 🆕 실패 기록
+                System.out.println("❌ 잘못된 비밀번호 로직 진입");
+                authMetricsRecorder.counterLoginFailure("잘못된 비밀번호");
                 throw new IllegalArgumentException("잘못된 비밀번호입니다.");
             }
 
@@ -60,6 +61,14 @@ public class AuthService {
                             token -> token.updateToken(tokenDto.getRefreshToken()),
                             () -> refreshTokenRepository.save(refreshToken)
                     );
+            boolean matched = passwordEncoder.matches(loginDto.getPassword(), member.getPassword());
+            System.out.println("비밀번호 일치 여부: " + matched);
+
+            if (!matched) {
+                authMetricsRecorder.counterLoginFailure("잘못된 비밀번호");
+                throw new IllegalArgumentException("잘못된 비밀번호입니다.");
+            }
+
             authMetricsRecorder.counterLoginSuccess();  // 🆕 성공 기록
 
             return tokenDto;
@@ -68,6 +77,7 @@ public class AuthService {
         } finally {
             authMetricsRecorder.stopLoginTimer(sample, "status", "completed");  // 🆕 시간 측정 종료
         }
+
     }
 
     // 로그아웃

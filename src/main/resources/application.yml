@@ -91,7 +91,7 @@ management:
       prometheus:
         enabled: {}
 
-discord:
-  url: ${DISCORD_WEBHOOK_URL}
-  admin-discord-id: ${ADMIN_DISCORD_ID_CODE}
-  admin-name: ${ADMIN_NAME}
+  discord:
+    url: ${DISCORD_WEBHOOK_URL}
+    admin-discord-id: ${ADMIN_DISCORD_ID_CODE}
+    admin-name: ${ADMIN_NAME}

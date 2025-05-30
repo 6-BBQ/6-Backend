@@ -6,6 +6,7 @@ import com.sixbbq.gamept.metrics.recorder.CounterRecorder;
 import com.sixbbq.gamept.metrics.recorder.TimerRecorder;
 import com.sixbbq.gamept.metrics.recorder.GaugeRecorder;
 import io.micrometer.core.instrument.Timer;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -78,5 +79,12 @@ public class AuthMetricsRecorder {
     public void registerActiveSessionsGauge(AtomicInteger activeSessions) {
         gauge.registerListSize(AuthMetricNames.AUTH_ACTIVE_SESSIONS_GAUGE,
                 java.util.List.of(activeSessions.get()));
+    }
+
+    @PostConstruct
+    public void init() {
+        // 미리 모든 조합 한 번씩 초기화 (0으로 등록됨)
+        counterLoginFailure("잘못된 비밀번호");
+        counterLoginSuccess();
     }
 }
