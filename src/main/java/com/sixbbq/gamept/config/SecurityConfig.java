@@ -55,7 +55,8 @@ public class SecurityConfig {
                                 "/actuator/health",
                                 "/actuator/info",
                                 "/actuator/metrics/**",
-                                "/actuator/prometheus"
+                                "/actuator/prometheus",
+                                "/.well-known/pki-validation/**"
                         ).permitAll()
                         // 나머지 요청은 인증 필요
                         .anyRequest().authenticated()
@@ -74,7 +75,7 @@ public class SecurityConfig {
                 "http://www.rpgpt.store/",
                 "http://rpgpt.store/",
                 "https://www.rpgpt.store/",
-                "https://www.rpgpt.store/",
+                "https://rpgpt.store/",
                 "http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
