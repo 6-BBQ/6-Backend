@@ -83,6 +83,7 @@ public class CharacterRegistService {
                 userCharacter.setServerId(serverId);
                 userCharacter.setAdventureName(characterDetail.getAdventureName());
                 userCharacter.setCreatedAt(LocalDateTime.now());
+                userCharacter.setAiRequestCount(0);
             } else if (byUserId.get(0).getAdventureName().equals(characterDetail.getAdventureName())) {
                 userCharacter.setUserId(userId);
                 userCharacter.setCharacterId(characterId);
@@ -90,6 +91,7 @@ public class CharacterRegistService {
                 userCharacter.setServerId(serverId);
                 userCharacter.setAdventureName(characterDetail.getAdventureName());
                 userCharacter.setCreatedAt(LocalDateTime.now());
+                userCharacter.setAiRequestCount(0);
             }  else {
                 return new CharacterRegistResponseDto(false,"모험단명이 일치하지 않습니다.");
             }
