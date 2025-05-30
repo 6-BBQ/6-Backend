@@ -7,6 +7,7 @@ import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.RequestAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.ResponseAIDTO;
 import com.sixbbq.gamept.api.dnf.dto.request.SpecCheckRequestDTO;
+import com.sixbbq.gamept.api.dnf.dto.response.CurrentCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
 import com.sixbbq.gamept.characterRegist.entity.CharacterRegist;
@@ -24,15 +25,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -286,18 +281,16 @@ public class DFController {
                 compareAuction.setAuraPrice(dfService.getAuctionPrice(compareAI.getAuraName()));
             }
 
-            // 응답 데이터 구성
-            Map<String, Object> response = new HashMap<>();
-            response.put("currentCharacter", Map.of(
-                    "characterInfo", currentCharacter,
-                    "auctionInfo", currentAuction
-            ));
-            response.put("compareCharacter", Map.of(
-                    "characterInfo", compareCharacter,
-                    "auctionInfo", compareAuction
-            ));
+            log.info("currentAuction : {}", currentAuction);
+            log.info("compareAuction : {}", compareAuction);
 
-            return ResponseEntity.ok(response);
+
+            // 응답 데이터 구성
+            List<CurrentCharacterResponseDTO> responseDTO = new ArrayList<>();
+            responseDTO.add(new CurrentCharacterResponseDTO(currentCharacter, currentAuction));
+            responseDTO.add(new CurrentCharacterResponseDTO(compareCharacter, compareAuction));
+
+            return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
             log.error("캐릭터 아이템 비교 실패: {}", e.getMessage());
             throw new NoSuchElementException("캐릭터 아이템 비교 중 오류가 발생했습니다.");

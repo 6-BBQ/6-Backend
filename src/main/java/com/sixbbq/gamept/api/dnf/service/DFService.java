@@ -341,9 +341,9 @@ public class DFService {
      */
     public Long getAuctionPrice(String itemName) {
         try {
-            String apiUrl = String.format("%s/auction?itemName=%s&sort=unitPrice:asc&limit=1&apikey=%s",
+            String apiUrl = String.format("%s/auction?itemName=%s&wordType=front&limit=1&sort=unitPrice:asc&apikey=%s",
                     NEOPLE_API_BASE_URL,
-                    java.net.URLEncoder.encode(itemName, "UTF-8"),
+                    itemName,
                     apiKey);
 
             ResponseEntity<AuctionResponseDTO> response = restTemplate.exchange(
@@ -357,7 +357,9 @@ public class DFService {
                     response.getBody().getRows() != null &&
                     !response.getBody().getRows().isEmpty()) {
                 // 가장 낮은 가격의 아이템 가격 반환
-                return response.getBody().getRows().get(0).getUnitPrice();
+                Long unitPrice = response.getBody().getRows().get(0).getUnitPrice();
+                log.info("price : {}", unitPrice);
+                return unitPrice;
             }
 
             log.warn("경매장에 등록된 아이템이 없습니다: {}", itemName);
