@@ -28,7 +28,7 @@ public class Member {
     private String nickname;
 
     @Column(name = "daily_ai_count")
-    private Integer dailyAiCount = 0;  // 일일 AI 사용 횟수
+    private Integer dailyAiCount = 0;  // 계정당 일일 AI 사용 횟수
 
     @Column(name = "last_ai_date")
     private LocalDate lastAiDate;  // 마지막 AI 사용 날짜
