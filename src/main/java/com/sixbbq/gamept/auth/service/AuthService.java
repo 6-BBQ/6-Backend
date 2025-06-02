@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -39,10 +40,18 @@ public class AuthService {
                         authMetricsRecorder.counterLoginFailure("가입되지 않은 아이디");  // 🆕 실패 기록
                         throw new IllegalArgumentException("가입되지 않은 아이디입니다.");
                     }
+            // 🆕 로그인 시 일일 AI 카운트 체크 및 초기화
+            LocalDate today = LocalDate.now();
+            if (member.getLastAiDate() == null || !member.getLastAiDate().equals(today)) {
+                member.setDailyAiCount(0);
+                member.setLastAiDate(today);
+                memberRepository.save(member);
+            }
 
             // 비밀번호 검증
             if (!passwordEncoder.matches(loginDto.getPassword(), member.getPassword())) {
-                authMetricsRecorder.counterLoginFailure("잘못된 비밀번호");  // 🆕 실패 기록
+                System.out.println("❌ 잘못된 비밀번호 로직 진입");
+                authMetricsRecorder.counterLoginFailure("잘못된 비밀번호");
                 throw new IllegalArgumentException("잘못된 비밀번호입니다.");
             }
 
@@ -60,6 +69,14 @@ public class AuthService {
                             token -> token.updateToken(tokenDto.getRefreshToken()),
                             () -> refreshTokenRepository.save(refreshToken)
                     );
+            boolean matched = passwordEncoder.matches(loginDto.getPassword(), member.getPassword());
+            System.out.println("비밀번호 일치 여부: " + matched);
+
+            if (!matched) {
+                authMetricsRecorder.counterLoginFailure("잘못된 비밀번호");
+                throw new IllegalArgumentException("잘못된 비밀번호입니다.");
+            }
+
             authMetricsRecorder.counterLoginSuccess();  // 🆕 성공 기록
 
             return tokenDto;
@@ -68,6 +85,7 @@ public class AuthService {
         } finally {
             authMetricsRecorder.stopLoginTimer(sample, "status", "completed");  // 🆕 시간 측정 종료
         }
+
     }
 
     // 로그아웃
