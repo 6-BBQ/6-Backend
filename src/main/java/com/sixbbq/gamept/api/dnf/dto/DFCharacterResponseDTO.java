@@ -41,4 +41,11 @@ public class DFCharacterResponseDTO {
     private Flag flag;
     private List<Talismans> talismans;
     private Skill skill;
+
+    // 경매장 정보
+    private DFCharacterAuctionResponseDTO auctionInfo;
+
+    public void setAuctionInfo(DFCharacterAuctionResponseDTO auctionInfo) {
+        this.auctionInfo = auctionInfo;
+    }
 }

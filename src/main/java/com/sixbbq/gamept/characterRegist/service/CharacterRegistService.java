@@ -2,6 +2,7 @@ package com.sixbbq.gamept.characterRegist.service;
 
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
+import com.sixbbq.gamept.api.dnf.util.DFUtil;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistDTO;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistRequestDto;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistResponseDto;
@@ -10,14 +11,18 @@ import com.sixbbq.gamept.characterRegist.repository.CharacterRegistRepository;
 import com.sixbbq.gamept.redis.service.RedisChatService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
 
 @Service
 public class CharacterRegistService {
@@ -26,6 +31,8 @@ public class CharacterRegistService {
     private final DFService dfService;
     private final RedisChatService redisChatService;
 
+    @Value("${dnf.api.character-image-base-url}")
+    private String CHARACTER_IMAGE_BASE_URL;
     private static final String CHARACTER_KEY_PREFIX = "character";
     private static final String CHAT_KEY_PREFIX = "chat";
 
@@ -76,6 +83,7 @@ public class CharacterRegistService {
                 userCharacter.setServerId(serverId);
                 userCharacter.setAdventureName(characterDetail.getAdventureName());
                 userCharacter.setCreatedAt(LocalDateTime.now());
+                userCharacter.setAiRequestCount(0);
             } else if (byUserId.get(0).getAdventureName().equals(characterDetail.getAdventureName())) {
                 userCharacter.setUserId(userId);
                 userCharacter.setCharacterId(characterId);
@@ -83,6 +91,7 @@ public class CharacterRegistService {
                 userCharacter.setServerId(serverId);
                 userCharacter.setAdventureName(characterDetail.getAdventureName());
                 userCharacter.setCreatedAt(LocalDateTime.now());
+                userCharacter.setAiRequestCount(0);
             }  else {
                 return new CharacterRegistResponseDto(false,"모험단명이 일치하지 않습니다.");
             }
@@ -118,6 +127,14 @@ public class CharacterRegistService {
             log.info("캐릭터 등록 완료: {}", response);
             return response;
 
+        } catch (HttpClientErrorException e) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "조회에 실패했습니다.");
+        }
+        catch (HttpServerErrorException e) {
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "던파 API 서버에 연결하지 못했습니다.");
+        }
+        catch (RestClientException e) {
+            throw new RestClientException("던파API 서버와의 응답이 실패했습니다.");
         } catch (NoSuchElementException e) {
             log.error("캐릭터 검색 오류: {}", e.getMessage(), e);
             return createErrorResponse("캐릭터 검색 중 오류가 발생했습니다: " + e.getMessage());
@@ -147,7 +164,8 @@ public class CharacterRegistService {
 
         for(CharacterRegist character : searchCharacterList) {
             CharacterRegist regist = characterAIStackCheck(character);
-            characterList.add(new CharacterRegistDTO(regist));
+            String imgUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, character.getServerId(), character.getCharacterId(), 1);
+            characterList.add(new CharacterRegistDTO(regist, imgUrl));
 
             redisChatService.clearChat(CHAT_KEY_PREFIX, character.getCharacterId());
             redisChatService.clearChat(CHARACTER_KEY_PREFIX, character.getCharacterId());
@@ -186,16 +204,17 @@ public class CharacterRegistService {
     public CharacterRegist characterAIStackCheck(CharacterRegist character) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime aiTime = character.getAiRequestTime();
-        LocalDateTime thresholdTime = aiTime.toLocalDate().plusDays(1).atStartOfDay();
+        if(aiTime != null) {
+            LocalDateTime thresholdTime = aiTime.toLocalDate().plusDays(1).atStartOfDay();
 
-        if(now.isAfter(thresholdTime)) {
-            character.setAiRequestTime(null);
-            character.setAiRequestCount(0);
-            CharacterRegist save = characterRegistRepository.save(character);
+            if(now.isAfter(thresholdTime)) {
+                character.setAiRequestTime(null);
+                character.setAiRequestCount(0);
+                CharacterRegist save = characterRegistRepository.save(character);
 
-            return save;
-        } else {
-            return character;
+                return save;
+            }
         }
+        return character;
     }
 }

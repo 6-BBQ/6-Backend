@@ -14,5 +14,6 @@ public class ResponseAIDTO {
     private boolean success;
     private String answer;
     private String message;
+    private String limitMessage;
     private int aiRequestCount;
 }
