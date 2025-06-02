@@ -15,6 +15,7 @@ import com.sixbbq.gamept.characterRegist.service.CharacterRegistService;
 import com.sixbbq.gamept.jwt.JwtTokenProvider;
 import com.sixbbq.gamept.redis.service.RedisChatService;
 import com.sixbbq.gamept.util.ErrorUtil;
+import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,7 @@ public class DFController {
     private static final String CHARACTER_KEY_PREFIX = "character";
     private static final String CHAT_KEY_PREFIX = "chat";
     private static final String RESPONSE_KEY_PREFIX = "response";
+    private static final String ENV = System.getProperty("env", "local");
 
     /**
      * 1. 던파 캐릭터 검색 API
@@ -126,10 +128,10 @@ public class DFController {
                                      HttpServletRequest request) {
         log.info("/api/df/chat : POST");
         log.info("characterId : {}, questionMessage : {}", characterId, questionMessage);
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String userId = authentication.getName();
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
+        try {
             CharacterRegist originalRegist = characterRegistService.getCharacters(userId, characterId);
 
             // 하루가 지났다면 질문횟수 초기화 하기
@@ -178,7 +180,9 @@ public class DFController {
 
             return ResponseEntity.ok().body(aiDTO);
         } catch (Exception e) {
-            ErrorUtil.logError(e, request, discordAdminName);
+            if (!("local".equalsIgnoreCase(ENV))) {
+                ErrorUtil.logError(e, request, userId);
+            }
             log.error(e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", "채팅 메시지 처리 실패"));
         }
@@ -193,11 +197,17 @@ public class DFController {
     public ResponseEntity<?> deleteChat(@RequestParam String characterId, HttpServletRequest request) {
         log.info("/api/df/chat : DELETE");
         log.info("characterId : {}", characterId);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
+
         try {
             redisChatService.clearChat(CHAT_KEY_PREFIX, characterId);
             redisChatService.clearChat(RESPONSE_KEY_PREFIX, characterId);
         } catch (Exception e) {
-            ErrorUtil.logError(e, request, discordAdminName);
+            if (!("local".equalsIgnoreCase(ENV))) {
+                ErrorUtil.logError(e, request, userId);
+            }
             Map<String, String> response = new HashMap<>();
             response.put("message", "채팅내역 초기화 실패");
             return ResponseEntity.badRequest().body(response);
@@ -239,10 +249,14 @@ public class DFController {
             @RequestParam String server,
             @RequestParam String characterId,
             @RequestParam String compareServer,
-            @RequestParam String compareCharacterId) {
+            @RequestParam String compareCharacterId,
+            HttpServletRequest request) {
         log.info("/api/df/character/compare : GET");
         log.info("server: {}, characterId: {}, compareServer: {}, compareCharacterId: {}",
                 server, characterId, compareServer, compareCharacterId);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
 
         try {
             // 현재 캐릭터 정보 조회
@@ -292,6 +306,9 @@ public class DFController {
 
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
+            if (!("local".equalsIgnoreCase(ENV))) {
+                ErrorUtil.logError(e, request, userId);
+            }
             log.error("캐릭터 아이템 비교 실패: {}", e.getMessage());
             throw new NoSuchElementException("캐릭터 아이템 비교 중 오류가 발생했습니다.");
         }
@@ -305,7 +322,6 @@ public class DFController {
      */
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<?> handleException(Exception e, HttpServletRequest request) {
-        ErrorUtil.logError(e, request, discordAdminName);
         Map<String, String> error = Map.of("error", e.getMessage());
         return ResponseEntity.badRequest().body(error);
     }
