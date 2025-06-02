@@ -16,4 +16,5 @@ public class ResponseAIDTO {
     private String message;
     private String limitMessage;
     private int aiRequestCount;
+    private int accountRemainingCount;
 }

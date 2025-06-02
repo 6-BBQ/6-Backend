@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -39,6 +40,13 @@ public class AuthService {
                         authMetricsRecorder.counterLoginFailure("가입되지 않은 아이디");  // 🆕 실패 기록
                         throw new IllegalArgumentException("가입되지 않은 아이디입니다.");
                     }
+            // 🆕 로그인 시 일일 AI 카운트 체크 및 초기화
+            LocalDate today = LocalDate.now();
+            if (member.getLastAiDate() == null || !member.getLastAiDate().equals(today)) {
+                member.setDailyAiCount(0);
+                member.setLastAiDate(today);
+                memberRepository.save(member);
+            }
 
             // 비밀번호 검증
             if (!passwordEncoder.matches(loginDto.getPassword(), member.getPassword())) {

@@ -10,6 +10,8 @@ import com.sixbbq.gamept.api.dnf.dto.request.SpecCheckRequestDTO;
 import com.sixbbq.gamept.api.dnf.dto.response.CurrentCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
+import com.sixbbq.gamept.auth.entity.Member;
+import com.sixbbq.gamept.auth.repository.MemberRepository;
 import com.sixbbq.gamept.characterRegist.entity.CharacterRegist;
 import com.sixbbq.gamept.characterRegist.service.CharacterRegistService;
 import com.sixbbq.gamept.jwt.JwtTokenProvider;
@@ -27,6 +29,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Slf4j
@@ -44,6 +47,7 @@ public class DFController {
     private final DFService dfService;
     private final RedisChatService redisChatService;
     private final CharacterRegistService characterRegistService;
+    private final MemberRepository memberRepository;
 
     private static final String CHARACTER_KEY_PREFIX = "character";
     private static final String CHAT_KEY_PREFIX = "chat";
@@ -125,10 +129,31 @@ public class DFController {
     public ResponseEntity<?> addChat(@RequestParam String characterId, @RequestParam String questionMessage,
                                      HttpServletRequest request) {
         log.info("/api/df/chat : POST");
-        log.info("characterId : {}, questionMessage : {}", characterId, questionMessage);
+        log.info("characterId : {}, question    Message : {}", characterId, questionMessage);
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String userId = authentication.getName();
+
+            // 계정 AI 사용 제한 체크 (20회) - 직접 처리
+            Member member = memberRepository.findById(userId)
+                    .orElseThrow(() -> new NoSuchElementException("사용자를 찾을 수 없습니다."));
+
+            // 날짜 체크해서 하루 지났으면 초기화
+            LocalDate today = LocalDate.now();
+            if (member.getLastAiDate() == null || !member.getLastAiDate().equals(today)) {
+                member.setDailyAiCount(0);
+                member.setLastAiDate(today);
+                memberRepository.save(member);
+            }
+
+            // 계정 20회 제한 체크
+            if(member.getDailyAiCount() >= 20) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "계정의 일일 AI 채팅 한도(20회)에 도달했습니다.");
+                response.put("accountRemainingCount", 0);
+                return ResponseEntity.ok().body(response);
+            }
 
             CharacterRegist originalRegist = characterRegistService.getCharacters(userId, characterId);
 
@@ -140,6 +165,8 @@ public class DFController {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
                 response.put("message", "일일 채팅의 한도에 도달했습니다.");
+                response.put("accountRemainingCount", Math.max(0, 20 - member.getDailyAiCount()));
+                response.put("characterRemainingCount", 0);
 
                 redisChatService.clearChat(CHAT_KEY_PREFIX, afterRegist.getCharacterId());
                 redisChatService.clearChat(CHARACTER_KEY_PREFIX, afterRegist.getCharacterId());
@@ -168,8 +195,14 @@ public class DFController {
             redisChatService.addChatMessage(CHAT_KEY_PREFIX, characterId, questionMessage);
             // AI 응답 저장
             redisChatService.addChatMessage(RESPONSE_KEY_PREFIX, characterId, aiDTO.getAnswer());
+            // 🆕 계정 AI 사용 횟수 증가
+            member.setDailyAiCount(member.getDailyAiCount() + 1);
+            memberRepository.save(member);
             // AI 사용 횟수 증가
             characterRegistService.plusAICount(afterRegist);
+
+            // 🆕 응답에 계정 남은 횟수 추가
+            aiDTO.setAccountRemainingCount(Math.max(0, 20 - member.getDailyAiCount()));
             aiDTO.setAiRequestCount(afterRegist.getAiRequestCount());
 
             if(getChat.size() >= 5 ) {
