@@ -88,7 +88,9 @@ public class ErrorUtil {
     public static void serverDown(Exception exception) {
         String env = System.getProperty("env", "local");
 
-        if ("env".equalsIgnoreCase(env)) {
+        if ("local".equalsIgnoreCase(env)) {
+            log.error("local 서버에서 서버 내림");
+        } else {
             String description = "";
             description = description + "백엔드 서버가 다운되었습니다.";
             description = description + "\n**발생시간** : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
@@ -118,8 +120,6 @@ public class ErrorUtil {
                 e.printStackTrace();
                 log.error(e.getMessage());
             }
-        } else {
-            log.error("local 서버에서 서버 내림");
         }
     }
 
