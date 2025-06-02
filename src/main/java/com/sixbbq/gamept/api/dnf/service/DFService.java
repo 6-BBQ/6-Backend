@@ -218,7 +218,7 @@ public class DFService {
                                 }
                             break;
                         case TALISMAN:
-                            if(characterDetails.get("talisman") != null) {
+                            if(characterDetails.get("talismans") != null) {
                                 dto.setTalismans(objectMapper.convertValue(characterDetails.get("talismans"), new TypeReference<>() {
                                 }));
                                 for (Talismans talismans : dto.getTalismans()) {
@@ -297,8 +297,8 @@ public class DFService {
                                 }
                             }
                             break;
-
                     }
+                    log.info("talismans : {} ", dto.getTalismans());
                 }
 
                 String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, dto.getServerId(), characterId, 2);
