@@ -85,6 +85,44 @@ public class ErrorUtil {
         }
     }
 
+    public static void serverDown(Exception exception) {
+        String env = System.getProperty("env", "local");
+
+        if ("local".equalsIgnoreCase(env)) {
+            log.error("local 서버에서 서버 내림");
+        } else {
+            String description = "";
+            description = description + "백엔드 서버가 다운되었습니다.";
+            description = description + "\n**발생시간** : " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+            String content = discordProperties.getAdminId();
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            DiscordMessageDTO dto = DiscordMessageDTO.builder()
+                    .username("serverDown")
+                    .content(content)
+                    .embeds(List.of(DiscordMessageDTO.Embed.builder()
+                            .title("에러정보")
+                            .description(description)
+                            .build()))
+                    .build();
+            try {
+                String json = objectMapper.writeValueAsString(dto);
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(discordProperties.getDiscordUrl()))
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(json))
+                        .build();
+
+                HttpClient client = HttpClient.newHttpClient();
+                client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                log.error(e.getMessage());
+            }
+        }
+    }
+
     //요청타입(GET,POST,PUT 등)과 URL 전체경로 반환
     public static String createRequestFullPath(HttpServletRequest servletRequest) {
         ServletWebRequest servletWebRequest = new ServletWebRequest(servletRequest);
