@@ -1,6 +1,7 @@
 package com.sixbbq.gamept;
 
 import com.sixbbq.gamept.exception.ServerDownException;
+import com.sixbbq.gamept.util.ErrorUtil;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -31,7 +32,7 @@ public class GameptApplication {
 
         @Override
         public void run() {
-            throw new ServerDownException("시스템 다운");
+            ErrorUtil.serverDown(new ServerDownException("시스템 다운"));
         }
     }
 }
