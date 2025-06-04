@@ -33,30 +33,6 @@ services:
     networks:
       - monitoring
 
-  loki:
-    image: grafana/loki:2.9.8
-    container_name: loki
-    ports:
-      - "3100:3100"
-    volumes:
-      - loki-storage:/loki
-      - ./loki/local-config.yaml:/etc/loki/local-config.yaml
-    command: -config.file=/etc/loki/local-config.yaml
-    networks:
-      - monitoring
-
-  promtail:
-    image: grafana/promtail:2.9.8
-    container_name: promtail
-    volumes:
-      - ./logs:/var/log/gamept:ro
-      - ./promtail/config.yml:/etc/promtail/config.yml:ro
-    command: -config.file=/etc/promtail/config.yml
-    networks:
-      - monitoring
-    depends_on:
-      - loki
-
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
