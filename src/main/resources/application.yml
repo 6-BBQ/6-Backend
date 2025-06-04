@@ -1,84 +1,103 @@
-  spring:
-    application:
-      name: gamept
+spring:
+  application:
+    name: gamept
 
-    jackson:
-      serialization:
-        write-dates-as-timestamps: false   # 직렬화 시 timestamp 숫자 대신 ISO 문자열 사용
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false   # 직렬화 시 timestamp 숫자 대신 ISO 문자열 사용
 
 
-    datasource:
-      url: ${DB_URL}
-      driver-class-name: ${DB_DRIVER_NAME}
-      username: ${DB_USER_NAME}
-      password: ${DB_PASSWORD}
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: ${DB_DRIVER_NAME}
+    username: ${DB_USER_NAME}
+    password: ${DB_PASSWORD}
 
-    config:
-      import: optional:file:.env[.properties]
+  config:
+    import: optional:file:.env[.properties]
 
-    jpa:
-      properties:
-        hibernate:
-          format_sql: true
+  jpa:
+    properties:
       hibernate:
-        ddl-auto: update
-    data:
-      redis:
-        port: ${REDIS_PORT}
-        host: ${REDIS_HOST}
+        format_sql: true
+    hibernate:
+      ddl-auto: update
+  data:
+    redis:
+      port: ${REDIS_PORT}
+      host: ${REDIS_HOST}
 
-    mail:
-      host: smtp.gmail.com
-      port: 587
-      username: ${EMAIL_USERNAME}
-      password: ${EMAIL_PASSWORD}
-      properties:
-        mail:
-          smtp:
-            auth: true
-            starttls:
-              enable: true
-            ssl:
-              trust: "*"
-  springdoc:
-    swagger-ui:
-      path: /swagger-ui.html
-      operations-sorter: alpha
-      tags-sorter: alpha
-      disable-swagger-default-url: true
-      doc-expansion: none
-    api-docs:
-      path: /api-docs
-    default-consumes-media-type: application/json
-    default-produces-media-type: application/json
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USERNAME}
+    password: ${EMAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            trust: "*"
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+    disable-swagger-default-url: true
+    doc-expansion: none
+  api-docs:
+    path: /api-docs
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
 
-  maplestory:
-    api:
-      key: ${MAPLESTORY_API_KEY}
-      base-url: ${MAPLESTORY_API_BASE_URL}
+maplestory:
+  api:
+    key: ${MAPLESTORY_API_KEY}
+    base-url: ${MAPLESTORY_API_BASE_URL}
 
-  dnf:
-    api:
-      key: ${DNF_API_KEY}
-      base-url: ${DNF_API_BASE_URL}
-      character-image-base-url: ${DNF_API_CHARACTER_IMAGE_BASE_URL}
-      item-image-base-url: ${DNF_API_ITEM_IMAGE_BASE_URL}
+dnf:
+  api:
+    key: ${DNF_API_KEY}
+    base-url: ${DNF_API_BASE_URL}
+    character-image-base-url: ${DNF_API_CHARACTER_IMAGE_BASE_URL}
+    item-image-base-url: ${DNF_API_ITEM_IMAGE_BASE_URL}
 
 
-  loa:
-    api:
-      base-url: https://developer-lostark.game.onstove.com
-      token: ${LOA_API_KEY}
+loa:
+  api:
+    base-url: https://developer-lostark.game.onstove.com
+    token: ${LOA_API_KEY}
 
-  jwt:
-    secret: ${JWT_SECRET}
-    accessTokenExpirationMs: ${JWT_ACCESS_TOKEN_EXPIRATION_MS}
-    refreshTokenExpirationMs: ${JWT_REFRESH_TOKEN_EXPIRATION_MS}
+jwt:
+  secret: ${JWT_SECRET}
+  accessTokenExpirationMs: ${JWT_ACCESS_TOKEN_EXPIRATION_MS}
+  refreshTokenExpirationMs: ${JWT_REFRESH_TOKEN_EXPIRATION_MS}
 
-  ai:
-    url: ${AI_URL}
+ai:
+  url: ${AI_URL}
 
-  logging:
-    logstash:
-      host: ${LOGSTASH_URL}
-      port: ${LOGSTASH_PORT}
+# actuator 엔드포인트
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: {}
+
+logging:
+  logstash:
+    host: ${LOGSTASH_URL}
+    port: ${LOGSTASH_PORT}
+
+discord:
+  url: ${DISCORD_WEBHOOK_URL}
+  admin-discord-id: ${ADMIN_DISCORD_ID_CODE}
+  admin-name: ${ADMIN_NAME}

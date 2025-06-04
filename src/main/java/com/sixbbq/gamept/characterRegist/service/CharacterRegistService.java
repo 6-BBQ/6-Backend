@@ -2,34 +2,46 @@ package com.sixbbq.gamept.characterRegist.service;
 
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
 import com.sixbbq.gamept.api.dnf.service.DFService;
+import com.sixbbq.gamept.api.dnf.util.DFUtil;
+import com.sixbbq.gamept.characterRegist.dto.CharacterRegistDTO;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistRequestDto;
 import com.sixbbq.gamept.characterRegist.dto.CharacterRegistResponseDto;
 import com.sixbbq.gamept.characterRegist.entity.CharacterRegist;
 import com.sixbbq.gamept.characterRegist.repository.CharacterRegistRepository;
+import com.sixbbq.gamept.redis.service.RedisChatService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
 
 @Service
 public class CharacterRegistService {
     private static final Logger log = LoggerFactory.getLogger(CharacterRegistService.class);
     private final CharacterRegistRepository characterRegistRepository;
     private final DFService dfService;
+    private final RedisChatService redisChatService;
+
+    @Value("${dnf.api.character-image-base-url}")
+    private String CHARACTER_IMAGE_BASE_URL;
+    private static final String CHARACTER_KEY_PREFIX = "character";
+    private static final String CHAT_KEY_PREFIX = "chat";
 
     @Autowired
-    public CharacterRegistService(CharacterRegistRepository characterRegistRepository, DFService dfService) {
+    public CharacterRegistService(CharacterRegistRepository characterRegistRepository, DFService dfService,
+                                  RedisChatService redisChatService) {
         this.characterRegistRepository = characterRegistRepository;
         this.dfService = dfService;
+        this.redisChatService = redisChatService;
     }
 
     @Transactional
@@ -71,6 +83,7 @@ public class CharacterRegistService {
                 userCharacter.setServerId(serverId);
                 userCharacter.setAdventureName(characterDetail.getAdventureName());
                 userCharacter.setCreatedAt(LocalDateTime.now());
+                userCharacter.setAiRequestCount(0);
             } else if (byUserId.get(0).getAdventureName().equals(characterDetail.getAdventureName())) {
                 userCharacter.setUserId(userId);
                 userCharacter.setCharacterId(characterId);
@@ -78,6 +91,7 @@ public class CharacterRegistService {
                 userCharacter.setServerId(serverId);
                 userCharacter.setAdventureName(characterDetail.getAdventureName());
                 userCharacter.setCreatedAt(LocalDateTime.now());
+                userCharacter.setAiRequestCount(0);
             }  else {
                 return new CharacterRegistResponseDto(false,"모험단명이 일치하지 않습니다.");
             }
@@ -113,6 +127,14 @@ public class CharacterRegistService {
             log.info("캐릭터 등록 완료: {}", response);
             return response;
 
+        } catch (HttpClientErrorException e) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "조회에 실패했습니다.");
+        }
+        catch (HttpServerErrorException e) {
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "던파 API 서버에 연결하지 못했습니다.");
+        }
+        catch (RestClientException e) {
+            throw new RestClientException("던파API 서버와의 응답이 실패했습니다.");
         } catch (NoSuchElementException e) {
             log.error("캐릭터 검색 오류: {}", e.getMessage(), e);
             return createErrorResponse("캐릭터 검색 중 오류가 발생했습니다: " + e.getMessage());
@@ -134,10 +156,21 @@ public class CharacterRegistService {
      * 유저 아이디로 사용자의 캐릭터 조회
      */
     @Transactional
-    public List<CharacterRegist> getCharactersByAdventureName(String userId) {
-        log.info("모험단별 캐릭터 조회: userId={}, adventureName={}", userId);
+    public List<CharacterRegistDTO> getCharactersByAdventureName(String userId) {
+        log.info("모험단별 캐릭터 조회: userId={}", userId);
 
-        return characterRegistRepository.findByUserId(userId);
+        List<CharacterRegist> searchCharacterList = characterRegistRepository.findByUserId(userId);
+        List<CharacterRegistDTO> characterList = new ArrayList<>();
+
+        for(CharacterRegist character : searchCharacterList) {
+            CharacterRegist regist = characterAIStackCheck(character);
+            String imgUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, character.getServerId(), character.getCharacterId(), 1);
+            characterList.add(new CharacterRegistDTO(regist, imgUrl));
+
+            redisChatService.clearChat(CHAT_KEY_PREFIX, character.getCharacterId());
+            redisChatService.clearChat(CHARACTER_KEY_PREFIX, character.getCharacterId());
+        }
+        return characterList;
     }
 
     public boolean deleteCharacter(String userId, String characterId) {
@@ -148,5 +181,40 @@ public class CharacterRegistService {
         } else {
             return false;
         }
+    }
+
+    public CharacterRegist getCharacters(String userId, String characterId) {
+        Optional<CharacterRegist> findCharacter = characterRegistRepository.findByUserIdAndCharacterId(userId, characterId);
+        if (findCharacter.isPresent()) {
+            return findCharacter.get();
+        } else {
+            throw new NoSuchElementException("캐릭터를 찾을 수 없습니다!");
+        }
+    }
+
+    public void plusAICount(CharacterRegist regist) {
+        if(regist.getAiRequestTime() == null)
+            regist.setAiRequestTime(LocalDateTime.now());
+        regist.setAiRequestCount(regist.getAiRequestCount() + 1);
+
+        characterRegistRepository.save(regist);
+    }
+
+    // 하루가 지났는지 체크하여 초기화 여부를 확인하는 메서드
+    public CharacterRegist characterAIStackCheck(CharacterRegist character) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime aiTime = character.getAiRequestTime();
+        if(aiTime != null) {
+            LocalDateTime thresholdTime = aiTime.toLocalDate().plusDays(1).atStartOfDay();
+
+            if(now.isAfter(thresholdTime)) {
+                character.setAiRequestTime(null);
+                character.setAiRequestCount(0);
+                CharacterRegist save = characterRegistRepository.save(character);
+
+                return save;
+            }
+        }
+        return character;
     }
 }

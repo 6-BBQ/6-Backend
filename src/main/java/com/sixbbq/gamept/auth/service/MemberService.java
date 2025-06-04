@@ -4,21 +4,29 @@ import com.sixbbq.gamept.auth.dto.LoginDto;
 import com.sixbbq.gamept.auth.dto.SignupDto;
 import com.sixbbq.gamept.auth.entity.Member;
 import com.sixbbq.gamept.auth.repository.MemberRepository;
+import com.sixbbq.gamept.characterRegist.repository.CharacterRegistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 @Service
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final CharacterRegistRepository characterRegistRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
     @Autowired
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, EmailService emailService ) {
+    public MemberService(MemberRepository memberRepository, CharacterRegistRepository characterRegistRepository,
+                         PasswordEncoder passwordEncoder, EmailService emailService ) {
         this.memberRepository = memberRepository;
+        this.characterRegistRepository = characterRegistRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
     }
@@ -35,6 +43,11 @@ public class MemberService {
         // 아이디 중복 체크
         if (memberRepository.existsById(signupDto.getUserId())) {
             throw new IllegalArgumentException("이미 사용 중인 아이디입니다.");
+        }
+
+        // 이메일 중복 체크
+        if (memberRepository.existsByEmail(signupDto.getEmail())) {
+            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
 
         // 비밀번호 일치 여부 확인
@@ -67,15 +80,29 @@ public class MemberService {
 //        return null;
 //    }
 
-    // ID로 회원 조회
     @Transactional(readOnly = true)
     public Member findById(String userId) {
         return memberRepository.findById(userId).orElse(null);
     }
 
-    // 이메일 중복체크
     @Transactional(readOnly = true)
     public boolean isEmailDuplicate(String email) {
         return memberRepository.existsByEmail(email);
+    }
+
+    @Transactional
+    public Map<String, Object> deleteMember(String userId) {
+        Map<String, Object> response = new HashMap<>();
+        Optional<Member> findUser = memberRepository.findById(userId);
+        if(findUser.isPresent()) {
+            characterRegistRepository.deleteAllByUserId(userId);
+            memberRepository.delete(findUser.get());
+            response.put("success", true);
+            response.put("member", findUser.get());
+        } else {
+            response.put("success", false);
+        }
+
+        return response;
     }
 }

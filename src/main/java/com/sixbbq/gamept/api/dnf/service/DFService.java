@@ -2,6 +2,7 @@ package com.sixbbq.gamept.api.dnf.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sixbbq.gamept.api.dnf.dto.DFCharacterResponseDTO;
+import com.sixbbq.gamept.api.dnf.dto.auction.AuctionResponseDTO;
 import com.sixbbq.gamept.api.dnf.dto.avatar.Avatar;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffAvatar.BuffAvatar;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffCreature.BuffCreature;
@@ -12,6 +13,9 @@ import com.sixbbq.gamept.api.dnf.dto.equip.Equip;
 import com.sixbbq.gamept.api.dnf.dto.flag.Flag;
 import com.sixbbq.gamept.api.dnf.dto.buff.buffEquip.BuffSkill;
 import com.sixbbq.gamept.api.dnf.dto.flag.Gems;
+import com.sixbbq.gamept.api.dnf.dto.request.SpecCheckRequestDTO;
+import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckResponseDTO;
+import com.sixbbq.gamept.api.dnf.dto.response.SpecCheckUserInfo;
 import com.sixbbq.gamept.api.dnf.dto.skill.Skill;
 import com.sixbbq.gamept.api.dnf.dto.talisman.Runes;
 import com.sixbbq.gamept.api.dnf.dto.talisman.Talismans;
@@ -24,8 +28,12 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
@@ -37,8 +45,8 @@ public class DFService {
 
     private static final Logger log = LoggerFactory.getLogger(DFService.class);
     private final RestTemplate restTemplate;
-    private final DFCharacterService dfCharacterService;
     private final RedisChatService redisChatService;
+    private final DFCharacterService dfCharacterService;
 
     @Value("${dnf.api.key}")
     private String apiKey;
@@ -172,37 +180,50 @@ public class DFService {
                     switch (type) {
                         case EQUIPMENT:
                             dto.setEquipment(objectMapper.convertValue(characterDetails.get("equipment"), new TypeReference<>() {}));
-                            dto.setSetItemInfo(objectMapper.convertValue(characterDetails.get("setItemInfo"), new TypeReference<>() {}));
-                            for(Equip equip : dto.getEquipment()) {
-                                equip.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, equip.getItemId()));
+                            if(dto.getEquipment() != null && !dto.getEquipment().isEmpty()) {
+                                dto.setSetItemInfo(objectMapper.convertValue(characterDetails.get("setItemInfo"), new TypeReference<>() {
+                                }));
+                                for (Equip equip : dto.getEquipment()) {
+                                    equip.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, equip.getItemId()));
+                                }
                             }
                             break;
                         case AVATAR:
-                            dto.setAvatar(objectMapper.convertValue(characterDetails.get("avatar"), new TypeReference<>() {}));
-                            for(Avatar avatar : dto.getAvatar()) {
-                                avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
-                            }
+                                dto.setAvatar(objectMapper.convertValue(characterDetails.get("avatar"), new TypeReference<>() {
+                                }));
+                                if(dto.getAvatar() != null && !dto.getAvatar().isEmpty()) {
+                                    for (Avatar avatar : dto.getAvatar()) {
+                                        avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
+                                    }
+                                }
                             break;
                         case CREATURE:
-                            dto.setCreature(objectMapper.convertValue(characterDetails.get("creature"), Creature.class));
-                            dto.getCreature().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, characterId));
-                            for(Artifact artifact : dto.getCreature().getArtifact()) {
-                                artifact.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, artifact.getItemId()));
-                            }
+                                dto.setCreature(objectMapper.convertValue(characterDetails.get("creature"), Creature.class));
+                                if(dto.getCreature() != null) {
+                                    dto.getCreature().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, characterId));
+                                    for (Artifact artifact : dto.getCreature().getArtifact()) {
+                                        artifact.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, artifact.getItemId()));
+                                    }
+                                }
                             break;
                         case FLAG:
-                            dto.setFlag(objectMapper.convertValue(characterDetails.get("flag"), Flag.class));
-                            dto.getFlag().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, dto.getFlag().getItemId()));
-                            for(Gems gem : dto.getFlag().getGems()) {
-                                gem.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, gem.getItemId()));
-                            }
+                                dto.setFlag(objectMapper.convertValue(characterDetails.get("flag"), Flag.class));
+                                if(dto.getFlag() != null) {
+                                    dto.getFlag().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, dto.getFlag().getItemId()));
+                                    for (Gems gem : dto.getFlag().getGems()) {
+                                        gem.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, gem.getItemId()));
+                                    }
+                                }
                             break;
                         case TALISMAN:
-                            dto.setTalismans(objectMapper.convertValue(characterDetails.get("talismans"), new TypeReference<>() {}));
-                            for(Talismans talismans : dto.getTalismans()) {
-                                talismans.getTalisman().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, talismans.getTalisman().getItemId()));
-                                for(Runes runes : talismans.getRunes()) {
-                                    runes.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, runes.getItemId()));
+                            if(characterDetails.get("talismans") != null) {
+                                dto.setTalismans(objectMapper.convertValue(characterDetails.get("talismans"), new TypeReference<>() {
+                                }));
+                                for (Talismans talismans : dto.getTalismans()) {
+                                    talismans.getTalisman().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, talismans.getTalisman().getItemId()));
+                                    for (Runes runes : talismans.getRunes()) {
+                                        runes.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, runes.getItemId()));
+                                    }
                                 }
                             }
                             break;
@@ -235,8 +256,10 @@ public class DFService {
                             if (dto.getSkill() == null) dto.setSkill(new Skill());
                             dto.getSkill().setBuff(objectMapper.convertValue(
                                     ((Map<?, ?>) ((Map<?, ?>) characterDetails.get("skill")).get("buff")), BuffSkill.class));
-                            for(BuffEquipment equipment : dto.getSkill().getBuff().getEquipment()) {
-                                equipment.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, equipment.getItemId()));
+                            if(dto.getSkill().getBuff().getEquipment() != null) {
+                                for (BuffEquipment equipment : dto.getSkill().getBuff().getEquipment()) {
+                                    equipment.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, equipment.getItemId()));
+                                }
                             }
                             break;
                         case BUFF_AVATAR:
@@ -248,8 +271,10 @@ public class DFService {
                                 dto.getSkill().getBuff().setAvatar(
                                         objectMapper.convertValue(buffMapAvatar.get("avatar"), new TypeReference<List<BuffAvatar>>() {}));
                             }
-                            for(BuffAvatar avatar : dto.getSkill().getBuff().getAvatar()) {
-                                avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
+                            if(dto.getSkill().getBuff().getAvatar() != null) {
+                                for (BuffAvatar avatar : dto.getSkill().getBuff().getAvatar()) {
+                                    avatar.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, avatar.getItemId()));
+                                }
                             }
                             break;
                         case BUFF_CREATURE:
@@ -258,14 +283,18 @@ public class DFService {
                             if (dto.getSkill().getBuff() == null) {
                                 dto.getSkill().setBuff(objectMapper.convertValue(buffMapCreature, BuffSkill.class));
                             } else {
-                                dto.getSkill().getBuff().setCreature(
-                                        objectMapper.convertValue(buffMapCreature.get("creature"), new TypeReference<List<BuffCreature>>() {}));
+                                if (dto.getSkill().getBuff().getCreature() != null) {
+                                    dto.getSkill().getBuff().setCreature(
+                                            objectMapper.convertValue(buffMapCreature.get("creature"), new TypeReference<List<BuffCreature>>() {
+                                            }));
+                                }
                             }
-                            for(BuffCreature creature : dto.getSkill().getBuff().getCreature()) {
-                                creature.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, creature.getItemId()));
+                            if(dto.getSkill().getBuff().getCreature() != null) {
+                                for (BuffCreature creature : dto.getSkill().getBuff().getCreature()) {
+                                    creature.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, creature.getItemId()));
+                                }
                             }
                             break;
-
                     }
                 }
 
@@ -273,7 +302,7 @@ public class DFService {
                 dto.setImageUrl(imageUrl);
                 dto.setLastUpdated(LocalDateTime.now());
 
-                // Redis에 캐릭터 상세 정보와 요약정보 저장
+                // Redis에 캐릭터 요약정보 저장
                 try {
                     String characterInfoKey = "character:" + characterId;
                     redisChatService.setCharacterInfo(characterInfoKey, dto);
@@ -284,11 +313,71 @@ public class DFService {
             }
 
             return dto;
-        } catch (Exception e) {
+        } catch (HttpClientErrorException e) {
+            log.error("캐릭터 상세 정보 조회 실패 ("+ serverId +", "+ characterId +"): " + e.getMessage());
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "조회에 실패했습니다.");
+        }
+        catch (HttpServerErrorException e) {
+            log.error("캐릭터 상세 정보 조회 실패 ("+ serverId +", "+ characterId +"): " + e.getMessage());
+            throw new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "던파 API 서버에 연결하지 못했습니다.");
+        }
+        catch (RestClientException e) {
+            log.error("캐릭터 상세 정보 조회 실패 ("+ serverId +", "+ characterId +"): " + e.getMessage());
+            throw new RestClientException("던파API 서버와의 응답이 실패했습니다.");
+        }
+        catch (Exception e) {
             log.error("캐릭터 상세 정보 조회 실패 ("+ serverId +", "+ characterId +"): " + e.getMessage());
             throw new NoSuchElementException("캐릭터 상세 정보 조회 중 오류가 발생했습니다.");
         }
     }
 
+    /**
+     * 아이템 이름으로 경매장 가격 조회
+     * @param itemName 아이템 이름
+     * @return 경매장 가격 (골드)
+     */
+    public Long getAuctionPrice(String itemName) {
+        try {
+            String apiUrl = String.format("%s/auction?itemName=%s&wordType=front&limit=1&sort=unitPrice:asc&apikey=%s",
+                    NEOPLE_API_BASE_URL,
+                    itemName,
+                    apiKey);
 
+            ResponseEntity<AuctionResponseDTO> response = restTemplate.exchange(
+                    apiUrl,
+                    HttpMethod.GET,
+                    null,
+                    AuctionResponseDTO.class
+            );
+
+            if (response.getBody() != null &&
+                    response.getBody().getRows() != null &&
+                    !response.getBody().getRows().isEmpty()) {
+                // 가장 낮은 가격의 아이템 가격 반환
+                Long unitPrice = response.getBody().getRows().get(0).getUnitPrice();
+                log.info("price : {}", unitPrice);
+                return unitPrice;
+            }
+
+            log.warn("경매장에 등록된 아이템이 없습니다: {}", itemName);
+            return 0L;
+        } catch (Exception e) {
+            log.error("경매장 가격 조회 실패 (아이템: {}): {}", itemName, e.getMessage());
+            return 0L;
+        }
+    }
+
+    public SpecCheckResponseDTO specCheck(SpecCheckRequestDTO requestDTO) {
+        SpecCheckResponseDTO responseDTO = new SpecCheckResponseDTO();
+
+        for (SpecCheckUserInfo userInfo : requestDTO.getCheckUserList()) {
+            Map<String, Object> userInfoMap = searchCharacterByServerAndName(userInfo.getUserName(), userInfo.getUserServer());
+            String characterId = userInfoMap.get("characterId").toString();
+            String serverId = userInfoMap.get("serverId").toString();
+
+            DFCharacterResponseDTO characterInfo = getCharacterInfo(characterId, serverId);
+        }
+
+        return null;
+    }
 }

@@ -43,13 +43,22 @@ public class SecurityConfig {
                                 "/api/auth/send-verification",
                                 "/api/auth/verify-email",
                                 "/api/df/search",
+                                "/api/df/character/refresh",
+                                "/api/df/character/compare",
                                 "/api/auth/check-email-duplicate",
                                 "/api/auth/check-userid",
                                 // Swagger UI 접근 허용
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
-                                "/api-docs/**"
+                                "/api-docs/**",
+                                // Actuator 엔드포인트 접근 허용
+                                "/actuator/**",
+                                "/actuator/health",
+                                "/actuator/info",
+                                "/actuator/metrics/**",
+                                "/actuator/prometheus",
+                                "/.well-known/pki-validation/**"
                         ).permitAll()
                         // 나머지 요청은 인증 필요
                         .anyRequest().authenticated()
@@ -64,7 +73,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://www.rpgpt.store/","http://localhost:3000"));
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://www.rpgpt.store/",
+                "http://rpgpt.store/",
+                "https://www.rpgpt.store/",
+                "https://rpgpt.store/",
+                "http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
