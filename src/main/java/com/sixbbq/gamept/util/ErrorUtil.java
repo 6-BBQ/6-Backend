@@ -28,7 +28,7 @@ public class ErrorUtil {
     private static DiscordProperties discordProperties;
 
     /**
-     *
+     * Discord에 에러 메세지를 보내주는 메서드
      * @param exception : 에러 메세지
      * @param userId : 에러가 발생한 유저(디스코드 닉네임으로 출력됌)
      * @throws Exception : 처리 과정에서 에러가 발생하면 던져질 Exception
@@ -85,6 +85,11 @@ public class ErrorUtil {
         }
     }
 
+    /**
+     * 백엔드 서버가 내려가면 알림을 보내주는 기능,
+     * 환경변수[env]를 통해 VM옵션을 아무것도 입력하지 않은 local 환경에선 다운 메세지가 보내지지 않는다.
+     * @param exception 발생한 에러(여기선 커스텀 Exception으로 통일)
+     */
     public static void serverDown(Exception exception) {
         String env = System.getProperty("env", "local");
 

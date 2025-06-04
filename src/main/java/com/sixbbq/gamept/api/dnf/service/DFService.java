@@ -298,7 +298,6 @@ public class DFService {
                             }
                             break;
                     }
-                    log.info("talismans : {} ", dto.getTalismans());
                 }
 
                 String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, dto.getServerId(), characterId, 2);
