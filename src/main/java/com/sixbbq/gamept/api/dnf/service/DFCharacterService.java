@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DFCharacterService {
 
-    private final DFService dfService;
+//    private final DFService dfService;
     private final CharacterRegistRepository characterRegistRepository;
 
     @Transactional(readOnly = true)
@@ -31,9 +31,9 @@ public class DFCharacterService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public DFCharacterResponseDTO getOtherCharacterInfo(String serverId, String characterId) {
-        // DFService의 getCharacterInfo를 사용하여 캐릭터 정보와 경매장 정보를 함께 조회
-        return dfService.getCharacterInfo(serverId, characterId);
-    }
+//    @Transactional(readOnly = true)
+//    public DFCharacterResponseDTO getOtherCharacterInfo(String serverId, String characterId) {
+//        // DFService의 getCharacterInfo를 사용하여 캐릭터 정보와 경매장 정보를 함께 조회
+//        return dfService.getCharacterInfo(serverId, characterId);
+//    }
 }

@@ -26,9 +26,7 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +46,7 @@ public class DFService {
     private static final Logger log = LoggerFactory.getLogger(DFService.class);
     private final RestTemplate restTemplate;
     private final RedisChatService redisChatService;
-    private DFCharacterService dfCharacterService;
+    private final DFCharacterService dfCharacterService;
 
     @Value("${dnf.api.key}")
     private String apiKey;
@@ -298,7 +296,6 @@ public class DFService {
                             }
                             break;
                     }
-                    log.info("talismans : {} ", dto.getTalismans());
                 }
 
                 String imageUrl = DFUtil.buildCharacterImageUrl(CHARACTER_IMAGE_BASE_URL, dto.getServerId(), characterId, 2);

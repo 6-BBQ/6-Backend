@@ -5,22 +5,30 @@ import com.sixbbq.gamept.auth.dto.SignupDto;
 import com.sixbbq.gamept.auth.entity.Member;
 import com.sixbbq.gamept.auth.repository.MemberRepository;
 import com.sixbbq.gamept.metrics.support.AuthMetricsRecorder;
+import com.sixbbq.gamept.characterRegist.repository.CharacterRegistRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 @Service
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final CharacterRegistRepository characterRegistRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final AuthMetricsRecorder authMetricsRecorder;
 
     @Autowired
-    public MemberService(MemberRepository memberRepository, PasswordEncoder passwordEncoder, EmailService emailService, AuthMetricsRecorder authMetricsRecorder) {
+    public MemberService(MemberRepository memberRepository, CharacterRegistRepository characterRegistRepository,
+                         PasswordEncoder passwordEncoder, EmailService emailService, AuthMetricsRecorder authMetricsRecorder) {
         this.memberRepository = memberRepository;
+        this.characterRegistRepository = characterRegistRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.authMetricsRecorder = authMetricsRecorder;
@@ -110,5 +118,21 @@ public class MemberService {
     @Transactional(readOnly = true)
     public boolean isEmailDuplicate(String email) {
         return memberRepository.existsByEmail(email);
+    }
+
+    @Transactional
+    public Map<String, Object> deleteMember(String userId) {
+        Map<String, Object> response = new HashMap<>();
+        Optional<Member> findUser = memberRepository.findById(userId);
+        if(findUser.isPresent()) {
+            characterRegistRepository.deleteAllByUserId(userId);
+            memberRepository.delete(findUser.get());
+            response.put("success", true);
+            response.put("member", findUser.get());
+        } else {
+            response.put("success", false);
+        }
+
+        return response;
     }
 }

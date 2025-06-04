@@ -255,4 +255,32 @@ public class MemberController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteMember(HttpServletRequest request) {
+        log.info("/api/auth/me : DELETE");
+
+        Map<String, Object> response = new HashMap<>();
+
+        // Spring Security Context에서 인증 정보 가져오기
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String userId = authentication.getName();
+
+        try {
+
+            response = memberService.deleteMember(userId);
+            if ((Boolean) response.get("success")) {
+                response.put("message", "회원 삭제 성공");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("message", "회원 정보를 찾을 수 없습니다.");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        } catch (Exception e) {
+            ErrorUtil.logError(e, request, userId);
+            response.put("success", false);
+            response.put("message", "회원 정보 조회 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 }
