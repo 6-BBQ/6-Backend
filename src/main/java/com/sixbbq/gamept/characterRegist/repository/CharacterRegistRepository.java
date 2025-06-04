@@ -25,4 +25,6 @@ public interface CharacterRegistRepository extends JpaRepository<CharacterRegist
 
     boolean existsByUserIdAndCharacterId(String userId, String characterId);
     Optional<CharacterRegist> findByUserIdAndCharacterId(String userId, String characterId);
+
+    void deleteAllByUserId(String userId);
 }
