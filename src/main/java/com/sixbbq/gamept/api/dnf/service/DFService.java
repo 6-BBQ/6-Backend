@@ -215,18 +215,18 @@ public class DFService {
                                     }
                                 }
                             break;
-                        case TALISMAN:
-                            if(characterDetails.get("talismans") != null) {
-                                dto.setTalismans(objectMapper.convertValue(characterDetails.get("talismans"), new TypeReference<>() {
-                                }));
-                                for (Talismans talismans : dto.getTalismans()) {
-                                    talismans.getTalisman().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, talismans.getTalisman().getItemId()));
-                                    for (Runes runes : talismans.getRunes()) {
-                                        runes.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, runes.getItemId()));
-                                    }
-                                }
-                            }
-                            break;
+//                        case TALISMAN:
+//                            if(characterDetails.get("talismans") != null) {
+//                                dto.setTalismans(objectMapper.convertValue(characterDetails.get("talismans"), new TypeReference<>() {
+//                                }));
+//                                for (Talismans talismans : dto.getTalismans()) {
+//                                    talismans.getTalisman().setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, talismans.getTalisman().getItemId()));
+//                                    for (Runes runes : talismans.getRunes()) {
+//                                        runes.setItemImage(DFUtil.buildItemImageUrl(ITEM_IMAGE_BASE_URL, runes.getItemId()));
+//                                    }
+//                                }
+//                            }
+//                            break;
                         case SKILL:
                             dto.setSkill(objectMapper.convertValue(characterDetails.get("skill"), Skill.class));
                             // 레벨1인 스킬은 제외하는 부분. 던담 스타일로 갈거면 필요없는 데이터를 걸러야 하므로 사용
