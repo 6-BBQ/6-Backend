@@ -155,22 +155,7 @@ public class GameMetricsRecorder {
                 java.util.List.of(activeUsers.get()));
     }
 
-    // 세션 지속 시간
-    public void recordSessionDuration(String gameType, long durationMinutes) {
-        counter.increment(GameMetricNames.SESSION_DURATION_COUNTER,
-                "game_type", gameType,
-                "duration_range", getDurationRange(durationMinutes));
-    }
 
-    // 에러 관련 메트릭
-
-    // 게임 API 에러
-    public void counterGameApiError(String gameType, String errorType, String errorCode) {
-        counter.increment(GameMetricNames.GAME_API_ERROR_COUNTER,
-                "game_type", gameType,
-                "error_type", errorType,
-                "error_code", errorCode);
-    }
 
     // Helper 메서드
     private String getDurationRange(long minutes) {

@@ -40,6 +40,7 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/reissue",
                                 "/api/df/character",
+                                "/api/df/chat",
                                 "/api/auth/send-verification",
                                 "/api/auth/verify-email",
                                 "/api/df/search",
@@ -59,6 +60,7 @@ public class SecurityConfig {
                                 "/actuator/metrics/**",
                                 "/actuator/prometheus",
                                 "/.well-known/pki-validation/**"
+
                         ).permitAll()
                         // 나머지 요청은 인증 필요
                         .anyRequest().authenticated()
