@@ -1,4 +1,13 @@
 # rpgpt API 백엔드
+## 기술 스택
+Spring Boot 3.4.5  
+Spring Boot JPA  
+Spring Actuator  
+Spring Security  
+OpenAPI[Swagger] 2.8.5  
+JWT 0.11.5  
+MySQL 8.4  
+Redis  
 ## 회원 기능 API 주소
 ```POST``` /api/auth/signup : 회원가입  
 ```POST``` /api/auth/login : 로그인  
